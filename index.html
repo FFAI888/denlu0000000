@@ -1,25 +1,41 @@
-<!-- index.html - v0.03 -->
+<!-- index.html - v0.07_ui -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>连接钱包登录</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- 卡片容器 -->
   <div class="container">
     <h1>欢迎来到DApp</h1>
 
-    <!-- 连接钱包按钮 -->
-    <button onclick="connectWallet()">连接钱包</button>
+    <!-- 提示区域 -->
+    <div id="networkError" class="error"></div>
 
-    <!-- 输入框：左边加“邀请人”文字 -->
-    <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
-      <label for="inviter" style="font-size: 16px;">邀请人</label>
-      <input id="inviter" type="text" placeholder="请输入邀请人" style="padding: 10px; font-size: 16px; width: 60%;">
+    <!-- 按钮 -->
+    <button class="btn" onclick="connectWallet()">连接钱包</button>
+
+    <!-- 邀请人输入框（禁用） -->
+    <div class="input-group">
+      <label for="inviter">邀请人</label>
+      <input id="inviter" type="text" placeholder="不可输入"
+        readonly oncopy="return false" onpaste="return false"
+        oncut="return false" oncontextmenu="return false">
     </div>
-
   </div>
+
+  <!-- Loading 动画 -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast 成功提示 -->
+  <div id="toast" class="toast">连接成功！</div>
+
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="script.js"></script>
 </body>
