@@ -1,15 +1,15 @@
-// v1.44 首页：RongChain + CRC 实时价格 + 余额
+// v1.46 首页：RongChain + CRC 实时价格 + 余额（已知CRC代币地址）
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
   // 代币 & 池子地址
   const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
-  const CRC_TOKEN  = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5".toLowerCase(); // 你提供的 CRC 池子 token 地址（注意：如果这是池子地址，就不能查余额，需要 CRC 的合约地址）
+  const CRC_TOKEN  = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087".toLowerCase(); // ✅ CRC 代币地址
   const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
 
-  const RONG_PAIR = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795"; // RongChain-USDT 池子
-  const CRC_PAIR  = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5"; // CRC-USDT 池子
+  const RONG_USDT_PAIR = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795"; // RongChain-USDT
+  const RONG_CRC_PAIR  = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5"; // RongChain-CRC
 
   const pairAbi = [
     "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
@@ -27,36 +27,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     debugEl.textContent += "\n" + msg;
   }
 
-  // ===== 通用价格查询函数 =====
-  async function fetchPrice(pairAddress, tokenA, tokenB, labelId, labelName) {
+  // ===== 获取池子价格 =====
+  async function getPairPrice(pairAddress, tokenA, tokenB) {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const pair = new ethers.Contract(pairAddress, pairAbi, provider);
+
+    const token0 = (await pair.token0()).toLowerCase();
+    const token1 = (await pair.token1()).toLowerCase();
+    const reserves = await pair.getReserves();
+
+    let price;
+    if (token0 === tokenA && token1 === tokenB) {
+      price = reserves[1] / reserves[0]; // tokenB/tokenA
+    } else if (token0 === tokenB && token1 === tokenA) {
+      price = reserves[0] / reserves[1]; // tokenB/tokenA
+    } else {
+      logDebug(`池子不匹配: ${pairAddress}`);
+      return null;
+    }
+    return price;
+  }
+
+  // ===== 刷新价格 =====
+  async function refreshPrices() {
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const pair = new ethers.Contract(pairAddress, pairAbi, provider);
-
-      const token0 = (await pair.token0()).toLowerCase();
-      const token1 = (await pair.token1()).toLowerCase();
-      const reserves = await pair.getReserves();
-
-      let price;
-      if (token0 === USDT_TOKEN && token1 === tokenA) {
-        price = reserves[0] / reserves[1];
-      } else if (token0 === tokenA && token1 === USDT_TOKEN) {
-        price = reserves[1] / reserves[0];
-      } else {
-        document.getElementById(labelId).innerText = `⚠️ ${labelName}池子不匹配`;
-        logDebug(`${labelName}池子不匹配 token0=${token0} token1=${token1}`);
-        return;
+      const rongPrice = await getPairPrice(RONG_USDT_PAIR, RONG_TOKEN, USDT_TOKEN);
+      if (rongPrice) {
+        document.getElementById("price").innerText =
+          `RongChain/USDT 当前价格: $${rongPrice.toFixed(6)}`;
       }
 
-      document.getElementById(labelId).innerText =
-        `${labelName}/USDT 当前价格: $${price.toFixed(6)}`;
+      const rongCrc = await getPairPrice(RONG_CRC_PAIR, RONG_TOKEN, CRC_TOKEN);
+      if (rongPrice && rongCrc) {
+        const crcPrice = rongPrice / rongCrc; // CRC/USDT
+        document.getElementById("crcPrice").innerText =
+          `CRC/USDT 当前价格: $${crcPrice.toFixed(6)}`;
+      }
     } catch (e) {
-      document.getElementById(labelId).innerText = `${labelName}价格获取失败`;
-      logDebug(`${labelName} 查询出错: ` + e.message);
+      logDebug("刷新价格出错: " + e.message);
     }
   }
 
-  // ===== 通用余额查询函数 =====
+  // ===== 查询余额 =====
   async function fetchBalance(tokenAddress, labelId, labelName) {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -75,11 +87,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ===== 定时刷新价格 =====
-  setInterval(() => fetchPrice(RONG_PAIR, RONG_TOKEN, USDT_TOKEN, "price", "RongChain"), 1000);
-  setInterval(() => fetchPrice(CRC_PAIR, CRC_TOKEN, USDT_TOKEN, "crcPrice", "CRC"), 1000);
-
-  // ===== 查询余额（加载时执行一次）=====
+  // ===== 定时刷新 =====
+  setInterval(refreshPrices, 1000);
   fetchBalance(RONG_TOKEN, "rongBalance", "RongChain");
   fetchBalance(CRC_TOKEN, "crcBalance", "CRC");
 });
