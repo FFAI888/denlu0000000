@@ -1,5 +1,5 @@
-// v1.08 钱包地址 + PancakeSwap 实时价格 + K 线图
-document.addEventListener("DOMContentLoaded", () => {
+// v1.09 钱包地址 + PancakeSwap 行情 + RongChain 余额
+document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const account = urlParams.get("account");
   if (account) {
@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("walletAddress").innerText = "未检测到钱包地址";
   }
 
-  // ====== 获取 RongChain/USDT 实时价格 ======
-  const RONG_TOKEN = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795"; // 真实 RongChain 合约地址
-  const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955"; // BSC 上 USDT 合约
+  // ====== 实时价格（保持不变） ======
+  const RONG_TOKEN = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795"; // RongChain 合约地址
+  const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955"; // BSC USDT
   const GRAPH_API = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
 
   async function fetchPrice() {
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchPrice();
   setInterval(fetchPrice, 15000);
 
-  // ====== 获取 K 线数据（按 1 小时聚合） ======
+  // ====== K 线数据（保持 v1.08 逻辑） ======
   const chart = LightweightCharts.createChart(document.getElementById("kline"), {
     width: 350,
     height: 300,
@@ -78,13 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (result.data && result.data.swaps.length > 0) {
-        // 将 swap 数据聚合成 1 小时蜡烛
         const rawSwaps = result.data.swaps;
         const candlesMap = {};
 
         rawSwaps.forEach(swap => {
           const ts = parseInt(swap.timestamp);
-          const hour = Math.floor(ts / 3600) * 3600; // 按小时对齐时间
+          const hour = Math.floor(ts / 3600) * 3600;
           const price = (parseFloat(swap.amount1In) + parseFloat(swap.amount1Out)) /
                         (parseFloat(swap.amount0In) + parseFloat(swap.amount0Out) || 1);
 
@@ -100,12 +99,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const candles = Object.values(candlesMap).sort((a, b) => a.time - b.time);
         candleSeries.setData(candles);
-      } else {
-        console.warn("没有找到历史交易数据");
       }
     } catch (error) {
       console.error("获取 K 线失败:", error);
     }
   }
   fetchKline();
+
+  // ====== 查询钱包余额 ======
+  if (typeof window.ethereum !== "undefined" && account) {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const erc20Abi = [
+        "function balanceOf(address owner) view returns (uint256)",
+        "function decimals() view returns (uint8)"
+      ];
+      const tokenContract = new ethers.Contract(RONG_TOKEN, erc20Abi, provider);
+      const decimals = await tokenContract.decimals();
+      async function fetchBalance() {
+        try {
+          const balance = await tokenContract.balanceOf(account);
+          const formatted = ethers.utils.formatUnits(balance, decimals);
+          document.getElementById("rongBalance").innerText =
+            "RongChain 余额: " + parseFloat(formatted).toFixed(4);
+        } catch (err) {
+          document.getElementById("rongBalance").innerText = "余额获取失败";
+        }
+      }
+      fetchBalance();
+      setInterval(fetchBalance, 15000); // 每 15 秒刷新一次
+    } catch (err) {
+      document.getElementById("rongBalance").innerText = "余额检测失败";
+    }
+  }
 });
