@@ -9,8 +9,8 @@
     .hidden { display: none; }
     ul { padding-left: 20px; }
     li { margin: 5px 0; }
-    button { margin-left: 10px; }
-    input { padding: 5px; width: 300px; }
+    button { margin-left: 10px; padding: 6px 12px; border: none; background: #007bff; color: white; border-radius: 4px; cursor: pointer; }
+    input { padding: 6px; width: 300px; margin-top: 5px; }
     #logs { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
   </style>
 </head>
@@ -21,8 +21,16 @@
 
   <div id="adminPanel" class="hidden">
     <h2>白名单地址管理</h2>
-    <input type="text" id="newAddress" placeholder="输入钱包地址">
-    <button onclick="addWhitelist()">添加</button>
+
+    <div>
+      <input type="text" id="newAddress" placeholder="输入要添加的钱包地址">
+      <button onclick="addWhitelist()">添加</button>
+    </div>
+
+    <div style="margin-top: 15px;">
+      <input type="text" id="removeAddress" placeholder="输入要移除的钱包地址">
+      <button onclick="removeWhitelist()">移除</button>
+    </div>
 
     <h2>白名单操作记录</h2>
     <div id="logs">加载中...</div>
