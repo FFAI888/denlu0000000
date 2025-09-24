@@ -1,4 +1,4 @@
-// v1.67 管理后台：地址检测 + 管理员校验 + 白名单管理 + 日志 + 事件监听
+// v1.68 管理后台：固定管理员 + 白名单管理 + 日志 + 事件监听
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ✅ 白名单合约地址
   const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722";
+  const FIXED_ADMIN = "0x5bab614240fe64c42d476fe9daff414e8d5a735e".toLowerCase();
+
   const abi = [
     "function owner() view returns (address)",
     "function addWhitelist(address user)",
@@ -29,17 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const signer = provider.getSigner();
   const contract = new ethers.Contract(WHITELIST_CONTRACT, abi, signer);
 
-  // 🚨 地址有效性检测
-  let owner;
-  try {
-    owner = await contract.owner();
-  } catch {
-    document.getElementById("notice").innerText = "❌ 白名单合约地址无效，请检查配置";
-    return;
-  }
-
-  // 管理员校验
-  if (owner.toLowerCase() !== account.toLowerCase()) {
+  // 🚨 校验固定管理员
+  if (account.toLowerCase() !== FIXED_ADMIN) {
     document.getElementById("notice").innerText = "⚠️ 你没有管理员权限";
     return;
   }
@@ -66,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // 移除白名单（可以扩展按钮调用）
+  // 移除白名单
   window.removeWhitelist = async function (addr) {
     if (!ethers.utils.isAddress(addr)) {
       alert("请输入有效的钱包地址！");
