@@ -1,11 +1,11 @@
-// v1.32 首页：调试框只显示关键数据
+// v1.33 首页：用 DexScreener API 查询价格
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
   const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
   const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
-  const GRAPH_V2 = "https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v2-bsc";
+  const DEXSCREENER_API = `https://api.dexscreener.com/latest/dex/pairs/bsc/${USDT_TOKEN}/${RONG_TOKEN}`;
 
   const debugEl = document.getElementById("debug");
   function logDebug(msg) {
@@ -16,44 +16,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   const walletEl = document.getElementById("walletAddress");
   if (walletEl) walletEl.innerText = "钱包地址: " + account;
 
-  // ===== 查询价格（仅 v2）=====
+  // ===== 查询价格（DexScreener）=====
   async function fetchPrice() {
     try {
-      const query = `
-      {
-        pairs(where: {token0: "${USDT_TOKEN}", token1: "${RONG_TOKEN}"}) {
-          id reserve0 reserve1
-        }
-      }`;
-
-      const res = await fetch(GRAPH_V2, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
+      logDebug("请求 DexScreener: " + DEXSCREENER_API);
+      const res = await fetch(DEXSCREENER_API);
       const result = await res.json();
+      logDebug("DexScreener 返回: " + JSON.stringify(result));
 
-      if (result.data && result.data.pairs.length > 0) {
-        const pair = result.data.pairs[0];
-        const price = parseFloat(pair.reserve0) / parseFloat(pair.reserve1);
-
-        // 页面显示价格
+      if (result && result.pairs && result.pairs.length > 0) {
+        const pair = result.pairs[0];
+        const priceUsd = pair.priceUsd;
         document.getElementById("price").innerText =
-          `RongChain/USDT 当前价格 (v2): $${price.toFixed(6)}`;
-
-        // 调试框关键数据
-        logDebug("池子 ID: " + pair.id);
-        logDebug("reserve0 (USDT): " + pair.reserve0);
-        logDebug("reserve1 (RONG): " + pair.reserve1);
-        logDebug("计算价格: " + price.toFixed(6));
+          `RongChain/USDT 当前价格: $${parseFloat(priceUsd).toFixed(6)}`;
+        logDebug("价格计算成功: " + priceUsd);
       } else {
         document.getElementById("price").innerText =
-          "⚠️ 未找到池子 (检查是否在 PancakeSwap v2)";
-        logDebug("没找到池子");
+          "⚠️ DexScreener 未找到池子";
+        logDebug("返回数据里没找到 pairs");
       }
     } catch (e) {
       document.getElementById("price").innerText = "价格获取失败";
-      logDebug("价格查询出错: " + e.message);
+      logDebug("DexScreener 查询出错: " + e.message);
     }
   }
   fetchPrice();
