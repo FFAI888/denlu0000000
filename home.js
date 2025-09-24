@@ -1,8 +1,19 @@
-// v1.50 首页：价格 + 余额实时刷新
+// v1.51 首页：自动检测钱包地址 + 实时价格余额刷新
 document.addEventListener("DOMContentLoaded", async () => {
-  const account = new URLSearchParams(window.location.search).get("account");
+  let account = new URLSearchParams(window.location.search).get("account");
+
+  if (!account && window.ethereum) {
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      account = accounts[0];
+    } catch (e) {
+      alert("未检测到钱包地址，请先连接钱包！");
+      return;
+    }
+  }
+
   if (!account) {
-    alert("未检测到钱包地址，请先连接钱包！");
+    document.getElementById("walletAddress").innerText = "钱包地址: 未连接";
     return;
   }
 
@@ -50,7 +61,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (token0 === quoteToken && token1 === baseToken) {
         price = reserves[0] / reserves[1]; // quote/base
       }
-
       return price;
     } catch (e) {
       logDebug(`价格查询失败: ${e.message}`);
@@ -96,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ===== 定时刷新价格和余额（每秒）=====
+  // ===== 定时刷新（每秒）=====
   setInterval(() => {
     refreshPrices();
     fetchBalance(RONG_TOKEN, "rongBalance", "RongChain");
