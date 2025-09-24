@@ -1,4 +1,4 @@
-// v1.68 管理后台：固定管理员 + 白名单管理 + 日志 + 事件监听
+// v1.69 管理后台：固定管理员 + 白名单管理 + 添加/移除 + 日志 + 事件监听（完整）
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ 白名单合约地址
+  // ✅ 白名单合约地址 & 固定管理员
   const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722";
   const FIXED_ADMIN = "0x5bab614240fe64c42d476fe9daff414e8d5a735e".toLowerCase();
 
@@ -43,8 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 添加白名单
   window.addWhitelist = async function () {
-    const input = document.getElementById("newAddress");
-    const addr = input.value.trim();
+    const addr = document.getElementById("newAddress").value.trim();
     if (!ethers.utils.isAddress(addr)) {
       alert("请输入有效的钱包地址！");
       return;
@@ -60,7 +59,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   // 移除白名单
-  window.removeWhitelist = async function (addr) {
+  window.removeWhitelist = async function () {
+    const addr = document.getElementById("removeAddress").value.trim();
     if (!ethers.utils.isAddress(addr)) {
       alert("请输入有效的钱包地址！");
       return;
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         logsEl.appendChild(div);
       }
     } catch (e) {
-      logsEl.innerHTML = "加载失败: " + e.message;
+      logsEl.innerHTML = "加载失败: " + e.message";
     }
   }
 
