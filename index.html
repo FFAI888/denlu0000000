@@ -23,14 +23,13 @@
       }
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        // ✅ 请求连接
         const accounts = await provider.send("eth_requestAccounts", []);
         const account = accounts[0];
         document.getElementById("status").innerText = "已连接钱包: " + account;
-        // 跳转首页
+        // 携带地址跳转首页
         window.location.href = "home.html?account=" + account;
       } catch (e) {
-        alert("连接失败: " + e.message);
+        alert("连接失败: " + (e && e.message ? e.message : e));
       }
     };
   </script>
