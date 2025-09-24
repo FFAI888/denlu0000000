@@ -1,12 +1,11 @@
-// v1.62 首页：整合完成版（链上白名单校验 + 管理员识别 + 价格/余额每秒刷新 + 事件监听 + 调试区仅管理员可见）
+// v1.66 首页：完整版（白名单校验 + 地址检测 + 行情 + 余额 + 事件监听）
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1) 检测/获取账号
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
     try {
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       account = accounts[0];
-    } catch (e) {
+    } catch {
       document.getElementById("loginNotice").innerText = "⚠️ 未连接钱包，请先登录！";
       return;
     }
@@ -16,8 +15,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 2) 白名单合约（请替换为你部署的真正地址）
-  const WHITELIST_CONTRACT = "0xYourWhitelistContract";
+  // ✅ 新的白名单合约地址
+  const WHITELIST_CONTRACT = "0xEcF7092d409F96C9702F5c4701af760D65F364E5";
   const whitelistAbi = [
     "function owner() view returns (address)",
     "function isWhitelisted(address user) view returns (bool)",
@@ -26,39 +25,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   ];
 
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner(); // 仅用于可能的签名交互；本页只读即可
-  const whitelist = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
+  const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
 
-  // 3) 白名单校验
-  const allowed = await whitelist.isWhitelisted(account);
+  // 🚨 地址有效性检测
+  try {
+    await contract.owner();
+  } catch {
+    document.getElementById("loginNotice").innerText = "❌ 白名单合约地址无效，请检查配置";
+    return;
+  }
+
+  // 白名单校验
+  const allowed = await contract.isWhitelisted(account);
   if (!allowed) {
     document.getElementById("loginNotice").innerText = "⚠️ 你没有访问权限";
     return;
   }
 
-  // 4) 管理员识别（owner）
+  // 管理员判断
   let isAdmin = false;
-  try {
-    const owner = await whitelist.owner();
-    isAdmin = owner.toLowerCase() === account.toLowerCase();
-  } catch {}
+  const owner = await contract.owner();
+  if (owner.toLowerCase() === account.toLowerCase()) {
+    isAdmin = true;
+  }
 
-  // 5) 解锁页面显示
+  // 显示页面
   document.getElementById("loginNotice").classList.add("hidden");
   document.getElementById("appContent").classList.remove("hidden");
   document.getElementById("walletAddress").innerText = "钱包地址: " + account;
 
-  // 管理员才显示调试与后台入口
-  const debugTitleEl = document.getElementById("debugTitle");
-  const debugEl = document.getElementById("debug");
-  const adminBtn = document.getElementById("adminBtn");
   if (isAdmin) {
-    debugTitleEl.classList.remove("hidden");
-    debugEl.classList.remove("hidden");
-    adminBtn.classList.remove("hidden");
+    document.getElementById("debugTitle").classList.remove("hidden");
+    document.getElementById("debug").classList.remove("hidden");
+    document.getElementById("adminBtn").classList.remove("hidden");
   }
 
-  // 6) 常量：代币 & 池子地址
+  // 按钮跳后台
+  window.goAdmin = function () {
+    window.location.href = "admin.html?account=" + account;
+  };
+
+  // ================== 代币与池子配置 ==================
   const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
   const CRC_TOKEN  = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087".toLowerCase();
   const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
@@ -78,17 +85,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   ];
 
   function logDebug(msg) {
-    if (!isAdmin) return; // 仅管理员可见日志
+    if (!isAdmin) return;
     const now = new Date().toLocaleTimeString();
-    debugEl.textContent += `\n[${now}] ${msg}`;
+    document.getElementById("debug").textContent += `\n[${now}] ${msg}`;
   }
 
-  // 7) 进入后台
-  window.goAdmin = function () {
-    window.location.href = "admin.html?account=" + account;
-  };
-
-  // 8) 价格工具：从池子读取 quote/base
+  // ================ 行情逻辑 ==================
   async function getPairPrice(pairAddress, baseToken, quoteToken) {
     try {
       const pair = new ethers.Contract(pairAddress, pairAbi, provider);
@@ -96,38 +98,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       const token1 = (await pair.token1()).toLowerCase();
       const reserves = await pair.getReserves();
 
-      let price = null;
       if (token0 === baseToken && token1 === quoteToken) {
-        price = reserves[1] / reserves[0]; // quote/base
+        return reserves[1] / reserves[0];
       } else if (token0 === quoteToken && token1 === baseToken) {
-        price = reserves[0] / reserves[1]; // quote/base
+        return reserves[0] / reserves[1];
       } else {
-        logDebug(`池子不匹配: ${pairAddress} token0=${token0} token1=${token1}`);
+        logDebug(`池子不匹配: ${pairAddress}`);
       }
-      if (price) logDebug(`✅ 链上验证成功: ${pairAddress} 价格=${price}`);
-      return price;
     } catch (e) {
       logDebug(`价格查询失败(${pairAddress}): ${e.message}`);
-      return null;
     }
+    return null;
   }
 
   async function refreshPrices() {
     const rongUsd = await getPairPrice(RONG_USDT_PAIR, RONG_TOKEN, USDT_TOKEN);
     if (rongUsd) {
-      document.getElementById("price").innerText =
-        `RongChain/USDT 当前价格: $${rongUsd.toFixed(6)}`;
+      document.getElementById("price").innerText = `RongChain/USDT 当前价格: $${rongUsd.toFixed(6)}`;
     }
-
     const rongCrc = await getPairPrice(RONG_CRC_PAIR, RONG_TOKEN, CRC_TOKEN);
     if (rongUsd && rongCrc) {
       const crcUsd = rongUsd / rongCrc;
-      document.getElementById("crcPrice").innerText =
-        `CRC/USDT 当前价格: $${crcUsd.toFixed(6)}`;
-      logDebug(`CRC/USDT 价格推算 = RONG/USDT ÷ RONG/CRC = ${crcUsd}`);
+      document.getElementById("crcPrice").innerText = `CRC/USDT 当前价格: $${crcUsd.toFixed(6)}`;
     }
   }
 
+  // ================ 余额逻辑 ==================
   async function fetchBalance(tokenAddr, labelId, labelName) {
     try {
       const token = new ethers.Contract(tokenAddr, erc20Abi, provider);
@@ -137,32 +133,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       const fmt = ethers.utils.formatUnits(raw, decimals);
       document.getElementById(labelId).innerText =
         `${labelName} 余额: ${parseFloat(fmt).toFixed(4)} ${symbol}`;
-      logDebug(`✅ ${labelName} 余额链上验证: ${fmt} ${symbol}`);
     } catch (e) {
       document.getElementById(labelId).innerText = `${labelName}余额获取失败`;
-      logDebug(`${labelName} 余额查询出错: ${e.message}`);
     }
   }
 
-  // 9) 每秒刷新 价格 + 余额（与旧版一致，不做减少）
+  // 每秒刷新
   refreshPrices();
   fetchBalance(RONG_TOKEN, "rongBalance", "RongChain");
-  fetchBalance(CRC_TOKEN,  "crcBalance", "CRC");
+  fetchBalance(CRC_TOKEN, "crcBalance", "CRC");
   setInterval(() => {
     refreshPrices();
     fetchBalance(RONG_TOKEN, "rongBalance", "RongChain");
-    fetchBalance(CRC_TOKEN,  "crcBalance", "CRC");
+    fetchBalance(CRC_TOKEN, "crcBalance", "CRC");
   }, 1000);
 
-  // 10) 事件监听：自己被加/移出白名单则即时锁/解锁
+  // ================ 白名单事件监听 ==================
   try {
-    whitelist.on("Added", (user) => {
+    contract.on("Added", (user) => {
       if (user.toLowerCase() === account.toLowerCase()) {
         alert("✅ 你已被加入白名单，功能已解锁");
-        // 已在白名单，无需额外动作
       }
     });
-    whitelist.on("Removed", (user) => {
+    contract.on("Removed", (user) => {
       if (user.toLowerCase() === account.toLowerCase()) {
         alert("⚠️ 你已被移出白名单，功能将锁定");
         document.getElementById("appContent").classList.add("hidden");
