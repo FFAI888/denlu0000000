@@ -7,6 +7,7 @@ contract Whitelist {
 
     event Added(address indexed user);
     event Removed(address indexed user);
+    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
 
     constructor() {
         owner = msg.sender;
@@ -15,6 +16,13 @@ contract Whitelist {
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
+    }
+
+    // ✅ 转让管理员权限
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Invalid address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
     function addWhitelist(address user) external onlyOwner {
