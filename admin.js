@@ -1,4 +1,4 @@
-// v1.61 管理后台：链上白名单 + 历史记录 + 时间戳
+// v1.62 管理后台：整合完成版（管理员校验 + 链上增删白名单 + 实时事件弹窗 + 历史记录时间戳）
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ 换成你部署的合约地址
+  // 白名单合约地址（替换为你的）
   const WHITELIST_CONTRACT = "0xYourWhitelistContract";
   const abi = [
     "function owner() view returns (address)",
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const signer = provider.getSigner();
   const contract = new ethers.Contract(WHITELIST_CONTRACT, abi, signer);
 
-  // 检查管理员
+  // 管理员校验
   const owner = await contract.owner();
   if (owner.toLowerCase() !== account.toLowerCase()) {
     document.getElementById("notice").innerText = "⚠️ 你没有管理员权限";
@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("notice").classList.add("hidden");
   document.getElementById("adminPanel").classList.remove("hidden");
 
+  // 添加白名单
   window.addWhitelist = async function () {
     const input = document.getElementById("newAddress");
     const addr = input.value.trim();
@@ -57,20 +58,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  // 实时事件弹窗
+  try {
+    contract.on("Added", (user) => {
+      alert(`✅ 白名单更新: ${user} 已加入白名单`);
+      loadLogsDebounced();
+    });
+    contract.on("Removed", (user) => {
+      alert(`⚠️ 白名单更新: ${user} 已移出白名单`);
+      loadLogsDebounced();
+    });
+  } catch {}
+
+  // 历史记录（最近 5000 区块）+ 时间戳
+  const logsEl = document.getElementById("logs");
+
   async function loadLogs() {
-    const logsEl = document.getElementById("logs");
     logsEl.innerHTML = "加载中...";
     try {
       const addedEvents = await contract.queryFilter(contract.filters.Added(), -5000);
       const removedEvents = await contract.queryFilter(contract.filters.Removed(), -5000);
 
-      const allEvents = [
+      const all = [
         ...addedEvents.map(e => ({ type: "添加", user: e.args[0], block: e.blockNumber })),
         ...removedEvents.map(e => ({ type: "移除", user: e.args[0], block: e.blockNumber }))
       ].sort((a, b) => b.block - a.block);
 
+      if (all.length === 0) {
+        logsEl.innerHTML = "暂无操作记录";
+        return;
+      }
+
       logsEl.innerHTML = "";
-      for (const ev of allEvents) {
+      for (const ev of all) {
         const block = await provider.getBlock(ev.block);
         const ts = new Date(block.timestamp * 1000).toLocaleString();
         const div = document.createElement("div");
@@ -80,6 +100,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (e) {
       logsEl.innerHTML = "加载失败: " + e.message;
     }
+  }
+
+  // 简单防抖，避免短时间频繁刷日志
+  let _logsTimer = null;
+  function loadLogsDebounced() {
+    if (_logsTimer) clearTimeout(_logsTimer);
+    _logsTimer = setTimeout(loadLogs, 1000);
   }
 
   loadLogs();
