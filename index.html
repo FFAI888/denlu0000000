@@ -1,4 +1,4 @@
-<!-- index.html - v0.01 -->
+<!-- index.html - v0.03 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,7 +9,16 @@
 <body>
   <div class="container">
     <h1>欢迎来到DApp</h1>
+
+    <!-- 连接钱包按钮 -->
     <button onclick="connectWallet()">连接钱包</button>
+
+    <!-- 输入框：左边加“邀请人”文字 -->
+    <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <label for="inviter" style="font-size: 16px;">邀请人</label>
+      <input id="inviter" type="text" placeholder="请输入邀请人" style="padding: 10px; font-size: 16px; width: 60%;">
+    </div>
+
   </div>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="script.js"></script>
