@@ -1,22 +1,24 @@
-// v1.20 手机调试版：关键数据用 alert 提示
+// v1.23 专门针对 USDT → RongChain 池子
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
-  const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
-  const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955";
+  // 地址小写
+  const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
+  const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
   const GRAPH_API = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
 
   // ===== 显示钱包地址 =====
   const walletEl = document.getElementById("walletAddress");
   if (walletEl) walletEl.innerText = "钱包地址: " + account;
 
-  // ===== 价格 =====
+  // ===== 价格（USDT → RONG）=====
   async function fetchPrice() {
     try {
       const query = `
       {
-        pairs(where: {token0: "${RONG_TOKEN}", token1: "${USDT_TOKEN}"}) {
+        pairs(where: {token0: "${USDT_TOKEN}", token1: "${RONG_TOKEN}"}) {
+          id
           reserve0
           reserve1
         }
@@ -31,14 +33,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (result.data && result.data.pairs.length > 0) {
         const pair = result.data.pairs[0];
-        const price = parseFloat(pair.reserve1) / parseFloat(pair.reserve0);
+        // USDT 在前，RONG 在后
+        const price = parseFloat(pair.reserve0) / parseFloat(pair.reserve1);
         document.getElementById("price").innerText =
-          `RongChain/USDT 当前价格: $${price.toFixed(4)}`;
-        alert("价格计算成功: " + price.toFixed(4));
+          `RongChain/USDT 当前价格: $${price.toFixed(6)}`;
+        alert("价格计算成功: " + price.toFixed(6));
       } else {
         document.getElementById("price").innerText =
-          "⚠️ 没找到池子，请确认是否在 PancakeSwap 建池";
-        alert("价格查询结果: 没找到池子");
+          "⚠️ 没找到 USDT→RongChain 池子";
+        alert("查询结果: 没找到池子");
       }
     } catch (e) {
       document.getElementById("price").innerText = "价格获取失败";
