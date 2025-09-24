@@ -1,37 +1,41 @@
-// v1.11 统一逻辑：登录页 + 首页行情 + 余额
+// v1.13 登录页 + 首页行情 + 余额整合逻辑
 document.addEventListener("DOMContentLoaded", async () => {
-  // ===== 登录页逻辑 =====
+  // ================= 登录页 =================
   const connectWalletBtn = document.getElementById("connectWalletBtn");
   if (connectWalletBtn) {
     connectWalletBtn.addEventListener("click", async () => {
+      alert("按钮点击事件已触发");
       console.log("连接钱包按钮被点击");
+
       if (typeof window.ethereum !== "undefined") {
         try {
           const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
           const account = accounts[0];
           console.log("钱包已连接:", account);
+          alert("钱包已连接: " + account);
           window.location.href = "home.html?account=" + account;
         } catch (error) {
+          console.error("连接钱包失败:", error);
           alert("连接钱包失败: " + error.message);
         }
       } else {
-        alert("未检测到钱包，请安装 MetaMask 插件");
+        alert("未检测到 MetaMask，请先安装钱包插件");
       }
     });
   }
 
-  // ===== 首页逻辑 =====
+  // ================= 首页 =================
   const account = new URLSearchParams(window.location.search).get("account");
-  const addressEl = document.getElementById("walletAddress");
-  if (addressEl && account) {
-    addressEl.innerText = "钱包地址: " + account;
-  }
+  if (!account) return; // 如果不是首页，就不往下执行
+
+  const walletAddressEl = document.getElementById("walletAddress");
+  if (walletAddressEl) walletAddressEl.innerText = "钱包地址: " + account;
 
   const RONG_TOKEN = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
   const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955";
   const GRAPH_API = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
 
-  // ===== 实时价格 =====
+  // ===== 价格 =====
   async function fetchPrice() {
     if (!document.getElementById("price")) return;
     try {
@@ -61,12 +65,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("price").innerText = "价格获取失败";
     }
   }
-  if (document.getElementById("price")) {
-    fetchPrice();
-    setInterval(fetchPrice, 15000);
-  }
+  fetchPrice();
+  setInterval(fetchPrice, 15000);
 
-  // ===== K 线数据 =====
+  // ===== K 线 =====
   if (document.getElementById("kline")) {
     const chart = LightweightCharts.createChart(document.getElementById("kline"), {
       width: 350,
@@ -126,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     fetchKline();
   }
 
-  // ===== 查询余额 =====
+  // ===== 余额 =====
   if (document.getElementById("rongBalance") && account && typeof window.ethereum !== "undefined") {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const erc20Abi = [
