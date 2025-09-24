@@ -1,4 +1,4 @@
-// v1.66 管理后台：完整版（地址检测 + 管理员校验 + 白名单管理 + 日志 + 事件监听）
+// v1.67 管理后台：地址检测 + 管理员校验 + 白名单管理 + 日志 + 事件监听
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -15,8 +15,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ 新的白名单合约地址
-  const WHITELIST_CONTRACT = "0xEcF7092d409F96C9702F5c4701af760D65F364E5";
+  // ✅ 白名单合约地址
+  const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722";
   const abi = [
     "function owner() view returns (address)",
     "function addWhitelist(address user)",
@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // ✅ 显示后台内容
   document.getElementById("notice").classList.add("hidden");
   document.getElementById("adminPanel").classList.remove("hidden");
 
@@ -65,6 +66,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  // 移除白名单（可以扩展按钮调用）
+  window.removeWhitelist = async function (addr) {
+    if (!ethers.utils.isAddress(addr)) {
+      alert("请输入有效的钱包地址！");
+      return;
+    }
+    try {
+      const tx = await contract.removeWhitelist(addr);
+      await tx.wait();
+      alert("移除成功！");
+      loadLogs();
+    } catch (e) {
+      alert("移除失败: " + e.message);
+    }
+  };
+
   // 实时事件监听
   try {
     contract.on("Added", (user) => {
@@ -75,7 +92,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert(`⚠️ 白名单更新: ${user} 已移出白名单`);
       loadLogsDebounced();
     });
-  } catch {}
+  } catch (e) {
+    console.error("事件监听失败:", e);
+  }
 
   const logsEl = document.getElementById("logs");
 
@@ -115,5 +134,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     _logsTimer = setTimeout(loadLogs, 1000);
   }
 
+  // 首次加载
   loadLogs();
 });
