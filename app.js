@@ -1,4 +1,4 @@
-// v1.15 登录页 + 首页行情 + 余额整合
+// v1.17 登录页 + 首页行情 + 余额整合
 document.addEventListener("DOMContentLoaded", async () => {
   // ===== 登录页逻辑 =====
   const connectWalletBtn = document.getElementById("connectWalletBtn");
@@ -19,15 +19,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("未检测到 MetaMask，请安装钱包插件");
       }
     });
-    return; // 在登录页就不执行行情逻辑
+    return; // 登录页就不往下执行
   }
 
   // ===== 首页逻辑 =====
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
-  const RONG_TOKEN = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
-  const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955";
+  // ✅ 使用新合约地址
+  const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
+  const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955"; // BSC USDT
   const GRAPH_API = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
 
   // 显示钱包地址
