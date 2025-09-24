@@ -2,21 +2,23 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>DApp 首页 - v1.06</title>
-  <link rel="stylesheet" href="styles.css?v=1.06">
+  <title>DApp 首页 - v1.09</title>
+  <link rel="stylesheet" href="styles.css?v=1.09">
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 </head>
 <body>
-  <div class="version">最高版本号: v1.06</div>
+  <div class="version">最高版本号: v1.09</div>
   <div class="container">
     <h1>欢迎，已成功连接钱包！</h1>
     <p id="walletAddress">正在加载钱包地址...</p>
+    <p id="rongBalance">RongChain 余额: 正在检测...</p>
   </div>
 
   <!-- 行情区域 -->
   <div class="market-section">
     <h2>RongChain/USDT PancakeSwap 行情</h2>
-    <p id="price">正在获取价格（来自 PancakeSwap DEX）...</p>
+    <p id="price">正在获取价格...</p>
     <div id="kline" class="chart-container"></div>
   </div>
 
@@ -29,6 +31,6 @@
     <a href="#" class="nav-item">我的</a>
   </div>
 
-  <script src="app.js?v=1.06"></script>
+  <script src="app.js?v=1.09"></script>
 </body>
 </html>
