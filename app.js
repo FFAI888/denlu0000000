@@ -1,27 +1,5 @@
-// v1.18 登录页 + 首页行情 + 余额增强
+// v1.20 手机调试版：关键数据用 alert 提示
 document.addEventListener("DOMContentLoaded", async () => {
-  // ===== 登录页 =====
-  const connectWalletBtn = document.getElementById("connectWalletBtn");
-  if (connectWalletBtn) {
-    connectWalletBtn.addEventListener("click", async () => {
-      alert("按钮点击事件已触发");
-      if (typeof window.ethereum !== "undefined") {
-        try {
-          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-          const account = accounts[0];
-          alert("钱包已连接: " + account);
-          window.location.href = "home.html?account=" + account;
-        } catch (err) {
-          alert("连接钱包失败: " + err.message);
-        }
-      } else {
-        alert("未检测到 MetaMask，请安装钱包插件");
-      }
-    });
-    return;
-  }
-
-  // ===== 首页 =====
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
@@ -29,18 +7,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const USDT_TOKEN = "0x55d398326f99059fF775485246999027B3197955";
   const GRAPH_API = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
 
-  // 显示钱包地址
+  // ===== 显示钱包地址 =====
   const walletEl = document.getElementById("walletAddress");
   if (walletEl) walletEl.innerText = "钱包地址: " + account;
 
-  // ===== 实时价格 =====
+  // ===== 价格 =====
   async function fetchPrice() {
-    if (!document.getElementById("price")) return;
-
-    async function queryPair(token0, token1) {
+    try {
       const query = `
       {
-        pairs(where: {token0: "${token0}", token1: "${token1}"}) {
+        pairs(where: {token0: "${RONG_TOKEN}", token1: "${USDT_TOKEN}"}) {
           reserve0
           reserve1
         }
@@ -51,36 +27,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: JSON.stringify({ query }),
       });
       const result = await res.json();
-      return result.data && result.data.pairs.length > 0 ? result.data.pairs[0] : null;
-    }
+      alert("价格查询返回: " + JSON.stringify(result));
 
-    try {
-      let pair = await queryPair(RONG_TOKEN, USDT_TOKEN);
-      let reverse = false;
-      if (!pair) {
-        pair = await queryPair(USDT_TOKEN, RONG_TOKEN);
-        reverse = true;
-      }
-
-      if (pair) {
-        let price;
-        if (!reverse) {
-          price = parseFloat(pair.reserve1) / parseFloat(pair.reserve0);
-        } else {
-          price = parseFloat(pair.reserve0) / parseFloat(pair.reserve1);
-        }
+      if (result.data && result.data.pairs.length > 0) {
+        const pair = result.data.pairs[0];
+        const price = parseFloat(pair.reserve1) / parseFloat(pair.reserve0);
         document.getElementById("price").innerText =
-          `RongChain/USDT 当前价格: $${price.toFixed(4)} (PancakeSwap)`;
+          `RongChain/USDT 当前价格: $${price.toFixed(4)}`;
+        alert("价格计算成功: " + price.toFixed(4));
       } else {
         document.getElementById("price").innerText =
-          "未找到 RongChain/USDT 流动池，请确认是否已在 PancakeSwap 建池";
+          "⚠️ 没找到池子，请确认是否在 PancakeSwap 建池";
+        alert("价格查询结果: 没找到池子");
       }
     } catch (e) {
       document.getElementById("price").innerText = "价格获取失败";
+      alert("价格查询出错: " + e.message);
     }
   }
   fetchPrice();
-  setInterval(fetchPrice, 15000);
 
   // ===== 余额 =====
   if (document.getElementById("rongBalance") && typeof window.ethereum !== "undefined") {
@@ -94,8 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let decimals = 18;
     try {
       decimals = await tokenContract.decimals();
+      alert("合约 decimals: " + decimals);
     } catch {
-      console.warn("合约未实现 decimals()，默认使用 18");
+      alert("合约没有 decimals()，默认 18");
     }
 
     async function fetchBalance() {
@@ -104,12 +70,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formatted = ethers.utils.formatUnits(balance, decimals);
         document.getElementById("rongBalance").innerText =
           "RongChain 余额: " + parseFloat(formatted).toFixed(4);
-      } catch {
-        document.getElementById("rongBalance").innerText =
-          "余额获取失败，请确认合约是否为标准 ERC20";
+        alert("余额查询结果: " + formatted);
+      } catch (err) {
+        document.getElementById("rongBalance").innerText = "余额获取失败";
+        alert("余额查询出错: " + err.message);
       }
     }
     fetchBalance();
-    setInterval(fetchBalance, 15000);
   }
 });
