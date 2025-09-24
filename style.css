@@ -1,39 +1,23 @@
-/* style.css - v0.08_ui */
-/* 继承 v0.07_ui 所有样式，并新增以下内容 */
-
-.btn.success {
-  background-color: #22c55e !important;
+/* v1.00 样式文件 */
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f0f2f5;
 }
 
-.btn .checkmark {
-  margin-left: 10px;
-  font-size: 18px;
+.container {
+  margin-top: 100px;
 }
 
-/* 波纹动画效果 */
-.ripple {
-  position: relative;
-  overflow: hidden;
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #4CAF50;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 
-.ripple::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  width: 100px;
-  height: 100px;
-  top: 50%;
-  left: 50%;
-  pointer-events: none;
-  transform: scale(0);
-  background: rgba(255, 255, 255, 0.6);
-  animation: ripple-effect 0.6s linear;
-  opacity: 0;
-}
-
-@keyframes ripple-effect {
-  to {
-    transform: scale(2.5);
-    opacity: 0;
-  }
+button:hover {
+  background: #45a049;
 }
