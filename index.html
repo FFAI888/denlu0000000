@@ -12,6 +12,7 @@
 <body>
   <h1>欢迎进入 RongChain DApp</h1>
   <button id="connectBtn">连接钱包</button>
+  <p id="status">未连接</p>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
@@ -22,8 +23,11 @@
       }
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
+        // ✅ 请求连接
         const accounts = await provider.send("eth_requestAccounts", []);
         const account = accounts[0];
+        document.getElementById("status").innerText = "已连接钱包: " + account;
+        // 跳转首页
         window.location.href = "home.html?account=" + account;
       } catch (e) {
         alert("连接失败: " + e.message);
