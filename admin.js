@@ -1,4 +1,4 @@
-// v1.65 管理后台：增加合约地址有效性检测 + 链上白名单 + 历史记录 + 时间戳 + 实时事件弹窗
+// v1.66 管理后台：完整版（地址检测 + 管理员校验 + 白名单管理 + 日志 + 事件监听）
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -15,7 +15,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const WHITELIST_CONTRACT = "0x5bab614240fe64c42d476fe9daff414e8d5a735e";
+  // ✅ 新的白名单合约地址
+  const WHITELIST_CONTRACT = "0xEcF7092d409F96C9702F5c4701af760D65F364E5";
   const abi = [
     "function owner() view returns (address)",
     "function addWhitelist(address user)",
@@ -33,11 +34,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     owner = await contract.owner();
   } catch {
-    document.getElementById("notice").innerText =
-      "❌ 白名单合约地址无效，请检查配置";
+    document.getElementById("notice").innerText = "❌ 白名单合约地址无效，请检查配置";
     return;
   }
 
+  // 管理员校验
   if (owner.toLowerCase() !== account.toLowerCase()) {
     document.getElementById("notice").innerText = "⚠️ 你没有管理员权限";
     return;
@@ -46,6 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("notice").classList.add("hidden");
   document.getElementById("adminPanel").classList.remove("hidden");
 
+  // 添加白名单
   window.addWhitelist = async function () {
     const input = document.getElementById("newAddress");
     const addr = input.value.trim();
@@ -63,6 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  // 实时事件监听
   try {
     contract.on("Added", (user) => {
       alert(`✅ 白名单更新: ${user} 已加入白名单`);
@@ -105,6 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // 防抖
   let _logsTimer = null;
   function loadLogsDebounced() {
     if (_logsTimer) clearTimeout(_logsTimer);
