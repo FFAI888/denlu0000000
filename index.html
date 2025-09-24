@@ -1,42 +1,16 @@
-<!-- index.html - v0.08_ui -->
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>连接钱包登录</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <title>DApp 登录页 - v1.00</title>
+  <link rel="stylesheet" href="styles.css?v=1.00">
 </head>
 <body>
-
-  <!-- 卡片容器 -->
   <div class="container">
-    <h1>欢迎来到DApp</h1>
-
-    <!-- 网络提示 -->
-    <div id="networkError" class="error"></div>
-
-    <!-- 按钮 -->
-    <button id="connectButton" class="btn ripple">连接钱包</button>
-
-    <!-- 邀请人输入框 -->
-    <div class="input-group">
-      <label for="inviter">邀请人</label>
-      <input id="inviter" type="text" placeholder="不可输入"
-        readonly oncopy="return false" onpaste="return false"
-        oncut="return false" oncontextmenu="return false">
-    </div>
+    <h1>欢迎来到我的 DApp</h1>
+    <button id="connectWalletBtn">连接钱包</button>
   </div>
 
-  <!-- Loading 动画 -->
-  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Toast 成功提示 -->
-  <div id="toast" class="toast">连接成功！</div>
-
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="script.js"></script>
+  <script src="app.js?v=1.00"></script>
 </body>
 </html>
