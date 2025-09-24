@@ -1,4 +1,4 @@
-// v1.66 首页：完整版（白名单校验 + 地址检测 + 行情 + 余额 + 事件监听）
+// v1.67 首页：白名单校验 + 地址检测 + 行情 + 余额 + 事件监听
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ✅ 新的白名单合约地址
-  const WHITELIST_CONTRACT = "0xEcF7092d409F96C9702F5c4701af760D65F364E5";
+  const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722";
   const whitelistAbi = [
     "function owner() view returns (address)",
     "function isWhitelisted(address user) view returns (bool)",
@@ -60,7 +60,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("adminBtn").classList.remove("hidden");
   }
 
-  // 按钮跳后台
   window.goAdmin = function () {
     window.location.href = "admin.html?account=" + account;
   };
