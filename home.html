@@ -16,15 +16,22 @@
       padding: 10px;
       border: 1px solid #ccc;
     }
+    #adminBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
   <h1>RongChain DApp 首页</h1>
 
-  <!-- 提示区域 -->
   <div id="loginNotice">⚠️ 请先连接钱包登录！</div>
 
-  <!-- 核心内容（默认隐藏） -->
   <div id="appContent" class="hidden">
     <div id="walletAddress">钱包地址: 检测中...</div>
     <div id="price">RongChain/USDT 价格: 检测中...</div>
@@ -32,12 +39,13 @@
     <div id="rongBalance">RongChain 余额: 检测中...</div>
     <div id="crcBalance">CRC 余额: 检测中...</div>
 
-    <!-- 调试信息（管理员才可见） -->
+    <!-- 管理后台按钮（仅管理员可见） -->
+    <button id="adminBtn" class="hidden" onclick="goAdmin()">进入管理后台</button>
+
     <h3 id="debugTitle" class="hidden">调试信息</h3>
     <div id="debug" class="hidden"></div>
   </div>
 
-  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="home.js"></script>
 </body>
