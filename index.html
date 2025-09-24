@@ -1,4 +1,4 @@
-<!-- index.html - v0.07_ui -->
+<!-- index.html - v0.08_ui -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,13 +13,13 @@
   <div class="container">
     <h1>欢迎来到DApp</h1>
 
-    <!-- 提示区域 -->
+    <!-- 网络提示 -->
     <div id="networkError" class="error"></div>
 
     <!-- 按钮 -->
-    <button class="btn" onclick="connectWallet()">连接钱包</button>
+    <button id="connectButton" class="btn ripple">连接钱包</button>
 
-    <!-- 邀请人输入框（禁用） -->
+    <!-- 邀请人输入框 -->
     <div class="input-group">
       <label for="inviter">邀请人</label>
       <input id="inviter" type="text" placeholder="不可输入"
