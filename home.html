@@ -2,24 +2,25 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>DApp 首页 - v1.26</title>
-  <link rel="stylesheet" href="styles.css?v=1.26">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <title>首页 - RongChain DApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #price, #walletAddress, #rongBalance { margin: 10px 0; font-size: 18px; }
+    #debug { margin-top: 20px; white-space: pre-wrap; font-size: 14px; color: #555; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; }
+  </style>
 </head>
 <body>
-  <div class="version">最高版本号: v1.26</div>
+  <h1>RongChain DApp 首页</h1>
+  <div id="walletAddress">钱包地址: 检测中...</div>
+  <div id="price">价格: 检测中...</div>
+  <div id="rongBalance">余额: 检测中...</div>
 
-  <div class="container">
-    <h1>首页</h1>
-    <p id="walletAddress">正在加载钱包地址...</p>
-    <p id="rongBalance">RongChain 余额: 正在检测...</p>
-    <p id="price">正在获取价格...</p>
+  <h3>调试信息</h3>
+  <div id="debug"></div>
 
-    <!-- 新增调试框 -->
-    <h3>调试信息</h3>
-    <pre id="debug">暂无</pre>
-  </div>
-
-  <script src="home.js?v=1.26"></script>
+  <!-- 引入 ethers.js (必须在 home.js 前) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="home.js"></script>
 </body>
 </html>
