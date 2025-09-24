@@ -1,8 +1,8 @@
-// v1.67 首页：白名单校验 + 地址检测 + 行情 + 余额 + 事件监听
+// v1.69 首页：白名单校验 + 地址检测 + 行情 + 余额 + 事件监听（完整）
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
 
-  // 如果 URL 没有传账号，就重新请求一次
+  // 若 URL 未传账号，则重新请求一次
   if (!account && window.ethereum) {
     try {
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ 显示钱包地址
+  // 显示钱包地址
   document.getElementById("walletAddress").innerText = "钱包地址: " + account;
 
   // ============ 白名单逻辑 ============
@@ -33,27 +33,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
 
+  // 地址有效性检测
   try {
-    await contract.owner(); // 校验合约存在
+    await contract.owner();
   } catch {
     document.getElementById("loginNotice").innerText = "❌ 白名单合约地址无效，请检查配置";
     return;
   }
 
+  // 白名单校验
   const allowed = await contract.isWhitelisted(account);
   if (!allowed) {
     document.getElementById("loginNotice").innerText = "⚠️ 你没有访问权限";
     return;
   }
 
-  // 管理员判断
+  // 管理员判断（当前 owner）
   let isAdmin = false;
   const owner = await contract.owner();
   if (owner.toLowerCase() === account.toLowerCase()) {
     isAdmin = true;
   }
 
-  // ✅ 展示页面内容
+  // 展示页面内容
   document.getElementById("loginNotice").classList.add("hidden");
   document.getElementById("appContent").classList.remove("hidden");
 
@@ -140,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 每秒刷新
+  // 每秒刷新（价格 + 余额）
   refreshPrices();
   fetchBalance(RONG_TOKEN, "rongBalance", "RongChain");
   fetchBalance(CRC_TOKEN, "crcBalance", "CRC");
