@@ -1,10 +1,12 @@
-// v1.35 首页：DexScreener 用池子地址查询价格
+// v1.36 首页：链上直查池子储备量计算价格
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
-  const PAIR_ADDRESS = "0x7f20de20b53b8145f75f7a7bc55cc90afeeb795"; // 全小写
-  const DEXSCREENER_API = `https://api.dexscreener.com/latest/dex/pairs/bsc/${PAIR_ADDRESS}`;
+  // 代币 & 池子地址
+  const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
+  const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
+  const PAIR_ADDRESS = "0x7f20de20b53b8145f75f7a7bc55cc90afeeb795"; // 你给的池子地址，已转小写
 
   const debugEl = document.getElementById("debug");
   function logDebug(msg) {
@@ -15,36 +17,53 @@ document.addEventListener("DOMContentLoaded", async () => {
   const walletEl = document.getElementById("walletAddress");
   if (walletEl) walletEl.innerText = "钱包地址: " + account;
 
-  // ===== 查询价格（DexScreener by pairAddress）=====
+  // ===== 链上直查价格 =====
   async function fetchPrice() {
     try {
-      logDebug("请求 DexScreener: " + DEXSCREENER_API);
-      const res = await fetch(DEXSCREENER_API);
-      const result = await res.json();
-      logDebug("DexScreener 返回: " + JSON.stringify(result));
+      if (typeof window.ethereum === "undefined") {
+        document.getElementById("price").innerText = "未检测到钱包环境";
+        logDebug("没有检测到 MetaMask/钱包");
+        return;
+      }
 
-      if (result && result.pairs && result.pairs.length > 0) {
-        const pair = result.pairs[0];
-        const priceUsd = pair.priceUsd;
-        const liquidity = pair.liquidity ? pair.liquidity.usd : "未知";
-        const volume24h = pair.volume ? pair.volume.h24 : "未知";
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const pairAbi = [
+        "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+        "function token0() view returns (address)",
+        "function token1() view returns (address)"
+      ];
+      const pair = new ethers.Contract(PAIR_ADDRESS, pairAbi, provider);
 
-        document.getElementById("price").innerText =
-          `RongChain/USDT 当前价格: $${parseFloat(priceUsd).toFixed(6)}`;
+      const token0 = (await pair.token0()).toLowerCase();
+      const token1 = (await pair.token1()).toLowerCase();
+      const reserves = await pair.getReserves();
 
-        logDebug("池子地址: " + pair.pairAddress);
-        logDebug("价格: " + priceUsd);
-        logDebug("流动性(USD): " + liquidity);
-        logDebug("24h 成交量(USD): " + volume24h);
+      logDebug("池子地址: " + PAIR_ADDRESS);
+      logDebug("token0: " + token0);
+      logDebug("token1: " + token1);
+      logDebug("reserve0: " + reserves[0].toString());
+      logDebug("reserve1: " + reserves[1].toString());
+
+      let price;
+      if (token0 === USDT_TOKEN && token1 === RONG_TOKEN) {
+        price = reserves[0] / reserves[1]; // USDT / RONG
+      } else if (token0 === RONG_TOKEN && token1 === USDT_TOKEN) {
+        price = reserves[1] / reserves[0]; // USDT / RONG
       } else {
         document.getElementById("price").innerText =
-          "⚠️ DexScreener 未找到该池子";
-        logDebug("返回为空");
+          "⚠️ 池子不匹配 (不是 USDT-RONG)";
+        logDebug("池子代币不匹配");
+        return;
       }
+
+      document.getElementById("price").innerText =
+        `RongChain/USDT 当前价格: $${price.toFixed(6)}`;
+      logDebug("计算价格成功: " + price.toFixed(6));
     } catch (e) {
       document.getElementById("price").innerText = "价格获取失败";
-      logDebug("DexScreener 查询出错: " + e.message);
+      logDebug("链上查询出错: " + e.message);
     }
   }
+
   fetchPrice();
 });
