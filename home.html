@@ -6,10 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    #price, #crcPrice, #walletAddress, #rongBalance, #crcBalance {
-      margin: 10px 0;
-      font-size: 18px;
-    }
+    .hidden { display: none; }
     #debug {
       margin-top: 20px;
       white-space: pre-wrap;
@@ -24,14 +21,20 @@
 <body>
   <h1>RongChain DApp 首页</h1>
 
-  <div id="walletAddress">钱包地址: 检测中...</div>
-  <div id="price">RongChain/USDT 价格: 检测中...</div>
-  <div id="crcPrice">CRC/USDT 价格: 检测中...</div>
-  <div id="rongBalance">RongChain 余额: 检测中...</div>
-  <div id="crcBalance">CRC 余额: 检测中...</div>
+  <!-- 提示区域（默认显示） -->
+  <div id="loginNotice">⚠️ 请先连接钱包登录！</div>
 
-  <h3>调试信息</h3>
-  <div id="debug"></div>
+  <!-- 核心内容（默认隐藏，登录后才显示） -->
+  <div id="appContent" class="hidden">
+    <div id="walletAddress">钱包地址: 检测中...</div>
+    <div id="price">RongChain/USDT 价格: 检测中...</div>
+    <div id="crcPrice">CRC/USDT 价格: 检测中...</div>
+    <div id="rongBalance">RongChain 余额: 检测中...</div>
+    <div id="crcBalance">CRC 余额: 检测中...</div>
+
+    <h3>调试信息</h3>
+    <div id="debug"></div>
+  </div>
 
   <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
