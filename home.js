@@ -1,11 +1,11 @@
-// v1.30 首页：余额换算器 + 合约检测
+// v1.32 首页：调试框只显示关键数据
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
 
   const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
   const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
-  const GRAPH_V2 = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
+  const GRAPH_V2 = "https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v2-bsc";
 
   const debugEl = document.getElementById("debug");
   function logDebug(msg) {
@@ -25,23 +25,27 @@ document.addEventListener("DOMContentLoaded", async () => {
           id reserve0 reserve1
         }
       }`;
-      logDebug("发送 v2 查询: " + query);
 
       const res = await fetch(GRAPH_V2, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
       });
-      const text = await res.text();
-      logDebug("v2 原始响应: " + text);
+      const result = await res.json();
 
-      const result = JSON.parse(text);
       if (result.data && result.data.pairs.length > 0) {
         const pair = result.data.pairs[0];
         const price = parseFloat(pair.reserve0) / parseFloat(pair.reserve1);
+
+        // 页面显示价格
         document.getElementById("price").innerText =
           `RongChain/USDT 当前价格 (v2): $${price.toFixed(6)}`;
-        logDebug("价格(v2)计算成功: " + price.toFixed(6));
+
+        // 调试框关键数据
+        logDebug("池子 ID: " + pair.id);
+        logDebug("reserve0 (USDT): " + pair.reserve0);
+        logDebug("reserve1 (RONG): " + pair.reserve1);
+        logDebug("计算价格: " + price.toFixed(6));
       } else {
         document.getElementById("price").innerText =
           "⚠️ 未找到池子 (检查是否在 PancakeSwap v2)";
@@ -53,60 +57,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
   fetchPrice();
-
-  // ===== 检测合约函数 + 余额换算 =====
-  if (typeof window.ethereum !== "undefined") {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const erc20Abi = [
-      "function balanceOf(address owner) view returns (uint256)",
-      "function decimals() view returns (uint8)",
-      "function symbol() view returns (string)",
-      "function name() view returns (string)"
-    ];
-    const tokenContract = new ethers.Contract(RONG_TOKEN, erc20Abi, provider);
-
-    async function checkContract() {
-      logDebug("开始检测合约函数...");
-      let decimals = 18;
-
-      try {
-        decimals = await tokenContract.decimals();
-        logDebug("decimals() 返回: " + decimals);
-      } catch (err) {
-        logDebug("decimals() 报错: " + err.message);
-      }
-
-      try {
-        const symbol = await tokenContract.symbol();
-        logDebug("symbol() 返回: " + symbol);
-      } catch (err) {
-        logDebug("symbol() 报错: " + err.message);
-      }
-
-      try {
-        const name = await tokenContract.name();
-        logDebug("name() 返回: " + name);
-      } catch (err) {
-        logDebug("name() 报错: " + err.message);
-      }
-
-      try {
-        const balanceRaw = await tokenContract.balanceOf(account);
-        logDebug("balanceOf() 原始返回: " + balanceRaw.toString());
-
-        const formatted = ethers.utils.formatUnits(balanceRaw, decimals);
-        logDebug("balanceOf() 换算后: " + formatted);
-
-        document.getElementById("rongBalance").innerText =
-          "RongChain 余额: " + parseFloat(formatted).toFixed(4);
-      } catch (err) {
-        document.getElementById("rongBalance").innerText = "余额获取失败";
-        logDebug("balanceOf() 报错: " + err.message);
-      }
-    }
-
-    checkContract();
-  } else {
-    logDebug("未检测到 MetaMask 环境，无法检测合约函数");
-  }
 });
