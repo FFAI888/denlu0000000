@@ -1,4 +1,4 @@
-// v1.29 首页调试版：检测代币合约函数
+// v1.30 首页：余额换算器 + 合约检测
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   fetchPrice();
 
-  // ===== 检测合约函数 =====
+  // ===== 检测合约函数 + 余额换算 =====
   if (typeof window.ethereum !== "undefined") {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const erc20Abi = [
@@ -67,8 +67,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function checkContract() {
       logDebug("开始检测合约函数...");
+      let decimals = 18;
+
       try {
-        const decimals = await tokenContract.decimals();
+        decimals = await tokenContract.decimals();
         logDebug("decimals() 返回: " + decimals);
       } catch (err) {
         logDebug("decimals() 报错: " + err.message);
@@ -89,9 +91,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       try {
-        const balance = await tokenContract.balanceOf(account);
-        logDebug("balanceOf() 返回: " + balance.toString());
+        const balanceRaw = await tokenContract.balanceOf(account);
+        logDebug("balanceOf() 原始返回: " + balanceRaw.toString());
+
+        const formatted = ethers.utils.formatUnits(balanceRaw, decimals);
+        logDebug("balanceOf() 换算后: " + formatted);
+
+        document.getElementById("rongBalance").innerText =
+          "RongChain 余额: " + parseFloat(formatted).toFixed(4);
       } catch (err) {
+        document.getElementById("rongBalance").innerText = "余额获取失败";
         logDebug("balanceOf() 报错: " + err.message);
       }
     }
