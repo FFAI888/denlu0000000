@@ -2,16 +2,26 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>DApp 登录页 - v1.24</title>
-  <link rel="stylesheet" href="styles.css?v=1.24">
+  <title>登录 - RongChain DApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-  <div class="version">最高版本号: v1.24</div>
-  <div class="container">
-    <h1>欢迎来到我的 DApp</h1>
-    <button id="connectWalletBtn">连接钱包</button>
-  </div>
+  <h1>RongChain DApp 登录</h1>
+  <button onclick="connectWallet()">连接钱包</button>
 
-  <script src="login.js?v=1.24"></script>
+  <!-- ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="login.js"></script>
 </body>
 </html>
