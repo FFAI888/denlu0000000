@@ -1,4 +1,4 @@
-// v1.62 管理后台：整合完成版（管理员校验 + 链上增删白名单 + 实时事件弹窗 + 历史记录时间戳）
+// v1.65 管理后台：增加合约地址有效性检测 + 链上白名单 + 历史记录 + 时间戳 + 实时事件弹窗
 document.addEventListener("DOMContentLoaded", async () => {
   let account = new URLSearchParams(window.location.search).get("account");
   if (!account && window.ethereum) {
@@ -15,8 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 白名单合约地址（替换为你的）
-  const WHITELIST_CONTRACT = "0xYourWhitelistContract";
+  const WHITELIST_CONTRACT = "0x5bab614240fe64c42d476fe9daff414e8d5a735e";
   const abi = [
     "function owner() view returns (address)",
     "function addWhitelist(address user)",
@@ -29,18 +28,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const signer = provider.getSigner();
   const contract = new ethers.Contract(WHITELIST_CONTRACT, abi, signer);
 
-  // 管理员校验
-  const owner = await contract.owner();
+  // 🚨 地址有效性检测
+  let owner;
+  try {
+    owner = await contract.owner();
+  } catch {
+    document.getElementById("notice").innerText =
+      "❌ 白名单合约地址无效，请检查配置";
+    return;
+  }
+
   if (owner.toLowerCase() !== account.toLowerCase()) {
     document.getElementById("notice").innerText = "⚠️ 你没有管理员权限";
     return;
   }
 
-  // 显示后台
   document.getElementById("notice").classList.add("hidden");
   document.getElementById("adminPanel").classList.remove("hidden");
 
-  // 添加白名单
   window.addWhitelist = async function () {
     const input = document.getElementById("newAddress");
     const addr = input.value.trim();
@@ -58,7 +63,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // 实时事件弹窗
   try {
     contract.on("Added", (user) => {
       alert(`✅ 白名单更新: ${user} 已加入白名单`);
@@ -70,7 +74,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   } catch {}
 
-  // 历史记录（最近 5000 区块）+ 时间戳
   const logsEl = document.getElementById("logs");
 
   async function loadLogs() {
@@ -102,7 +105,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 简单防抖，避免短时间频繁刷日志
   let _logsTimer = null;
   function loadLogsDebounced() {
     if (_logsTimer) clearTimeout(_logsTimer);
