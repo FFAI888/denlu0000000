@@ -1,4 +1,4 @@
-// v1.36 首页：链上直查池子储备量计算价格
+// v1.37 链上直查池子储备量
 document.addEventListener("DOMContentLoaded", async () => {
   const account = new URLSearchParams(window.location.search).get("account");
   if (!account) return;
@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 代币 & 池子地址
   const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e".toLowerCase();
   const USDT_TOKEN = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
-  const PAIR_ADDRESS = "0x7f20de20b53b8145f75f7a7bc55cc90afeeb795"; // 你给的池子地址，已转小写
+  const PAIR_ADDRESS = "0x7f20de20b53b8145f75f7a7bc55cc90afeeb795"; // 你给的池子地址（已小写）
 
   const debugEl = document.getElementById("debug");
   function logDebug(msg) {
