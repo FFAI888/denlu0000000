@@ -13,6 +13,9 @@
     button { padding: 8px 16px; font-size: 14px; margin-right: 5px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: #fff; }
     button:hover { background: #0056b3; }
     #status { margin-top: 15px; font-weight: bold; color: #333; }
+    .back { margin-top: 20px; text-align: center; }
+    .back button { background: #28a745; }
+    .back button:hover { background: #1c7c31; }
   </style>
 </head>
 <body>
@@ -45,6 +48,10 @@
 
   <div id="status">状态: 等待操作...</div>
 
+  <div class="back">
+    <button onclick="goHome()">返回首页</button>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
@@ -55,7 +62,12 @@
       "function transferOwnership(address newOwner) public"
     ];
 
-    let provider, signer, contract;
+    let provider, signer, contract, account;
+
+    function getBasePath() {
+      const path = window.location.pathname;
+      return path.includes("/frontend/") ? "/frontend/" : "/";
+    }
 
     async function init() {
       if (!window.ethereum) {
@@ -65,6 +77,10 @@
       provider = new ethers.providers.Web3Provider(window.ethereum);
       signer = provider.getSigner();
       contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, signer);
+
+      const params = new URLSearchParams(window.location.search);
+      account = params.get("account");
+
       fetchOwner();
     }
 
@@ -92,7 +108,7 @@
         const address = document.getElementById("whitelistAddress").value;
         const tx = await contract.addWhitelist(address);
         await tx.wait();
-        document.getElementById("status").innerText = "✅ 成功添加到白名单: " + address;
+        document.getElementById("status").innerText = "✅ 成功添加: " + address;
       } catch (e) {
         document.getElementById("status").innerText = "❌ 添加失败: " + e.message;
       }
@@ -103,7 +119,7 @@
         const address = document.getElementById("whitelistAddress").value;
         const tx = await contract.removeWhitelist(address);
         await tx.wait();
-        document.getElementById("status").innerText = "✅ 已移除白名单: " + address;
+        document.getElementById("status").innerText = "✅ 已移除: " + address;
       } catch (e) {
         document.getElementById("status").innerText = "❌ 移除失败: " + e.message;
       }
@@ -119,6 +135,11 @@
       } catch (e) {
         document.getElementById("status").innerText = "❌ 转移失败: " + e.message;
       }
+    }
+
+    function goHome() {
+      const base = getBasePath();
+      window.location.href = base + "home.html?account=" + account;
     }
 
     init();
