@@ -5,9 +5,35 @@
   <title>RongChain DApp 登录</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    #status { margin-top: 20px; font-weight: bold; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 15px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -15,18 +41,22 @@
   <button id="connectBtn">连接钱包</button>
   <div id="status">等待连接...</div>
 
+  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    const WHITELIST_CONTRACT = "0xa1852413ca02e6d2f653dd88586eae822e790d96b1e1aabcfc9d0a70b1175c66";
+    // === 合约配置 ===
+    const WHITELIST_CONTRACT = "0xa1852413ca02e6d2f653dd88586eae822e790d96b1e1aabcfc9d0a70b1175c66"; // 白名单合约地址
     const whitelistAbi = [
       "function isWhitelisted(address user) public view returns (bool)"
     ];
 
+    // === 连接钱包按钮事件 ===
     document.getElementById("connectBtn").onclick = async () => {
       if (!window.ethereum) {
-        alert("❌ 请先安装 MetaMask");
+        alert("❌ 请先安装 MetaMask 或其他钱包插件");
         return;
       }
+
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
@@ -34,6 +64,7 @@
 
         document.getElementById("status").innerText = "✅ 已连接: " + account;
 
+        // ===== 白名单校验 =====
         const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
         const allowed = await contract.isWhitelisted(account);
 
@@ -43,7 +74,7 @@
             window.location.href = "home.html?account=" + account;
           }, 1000);
         } else {
-          document.getElementById("status").innerText = "❌ 该地址不在白名单";
+          document.getElementById("status").innerText = "❌ 该地址不在白名单，禁止访问首页";
         }
       } catch (err) {
         document.getElementById("status").innerText = "❌ 连接失败: " + err.message;
