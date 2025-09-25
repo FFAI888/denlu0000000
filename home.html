@@ -2,13 +2,13 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 首页（v1.55）</title>
+  <title>RongChain 首页（v1.56）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="ver">v1.55</div>
-  <div class="topver">最高版本：v1.55</div>
+  <div class="ver">v1.56</div>
+  <div class="topver">最高版本：v1.56</div>
 
   <div class="content">
     <h1>RongChain 首页</h1>
@@ -45,26 +45,25 @@
       <div class="box">
         <div class="label">RongChain / USDT 现价</div>
         <div id="price" class="muted">加载中...</div>
+        <div class="muted">24h 涨跌幅: <span id="rongChange">计算中...</span></div>
       </div>
       <div class="box">
         <div class="label">RongChain / CRC 现价（推导 USDT）</div>
         <div id="crcPrice" class="muted">加载中...</div>
+        <div class="muted">24h 涨跌幅: <span id="crcChange">计算中...</span></div>
       </div>
     </div>
 
-    <!-- DexScreener 内嵌图表（RONG/USDT） -->
+    <!-- DexScreener 内嵌图表（带主题切换） -->
     <div class="box">
-      <div class="label">RongChain 实时行情图（DexScreener）</div>
-      <iframe src="https://dexscreener.com/bsc/0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795?embed=1&theme=light&trades=0&info=0"
+      <div class="label">RongChain 实时行情图</div>
+      <div class="theme-switch">
+        <button onclick="switchTheme('light')" id="themeLight">亮色</button>
+        <button onclick="switchTheme('dark')" id="themeDark">暗色</button>
+      </div>
+      <iframe id="dexFrame" 
+              src="https://dexscreener.com/bsc/0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795?embed=1&theme=light&trades=0&info=0"
               width="100%" height="600" frameborder="0"></iframe>
-    </div>
-
-    <!-- DexScreener 内嵌图表（RONG/CRC，如果池子有收录） -->
-    <div class="box">
-      <div class="label">RongChain / CRC 实时行情图（DexScreener）</div>
-      <iframe src="https://dexscreener.com/bsc/0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5?embed=1&theme=light&trades=0&info=0"
-              width="100%" height="600" frameborder="0"></iframe>
-      <div class="muted">⚠️ 如果 CRC 池子未被 DexScreener 收录，这里可能显示空白。</div>
     </div>
 
     <div class="admin-box">
