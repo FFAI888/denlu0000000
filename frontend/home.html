@@ -5,71 +5,16 @@
   <title>RongChain DApp 首页</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    .content {
-      padding-bottom: 200px;
-    }
-    .box {
-      margin: 20px 0;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-    }
-    .label {
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .admin-box {
-      margin: 20px 0;
-      padding: 15px;
-      border: 2px solid #007bff;
-      border-radius: 6px;
-      background: #e9f3ff;
-      display: none;
-    }
-    .admin-box button {
-      padding: 10px 15px;
-      font-size: 14px;
-      cursor: pointer;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-    .navbar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      background: #f1f1f1;
-      border-top: 1px solid #ccc;
-    }
-    .nav-item {
-      text-align: center;
-      flex: 1;
-      font-size: 14px;
-      cursor: pointer;
-      color: #333;
-    }
-    .nav-item:hover {
-      color: #007bff;
-    }
-    iframe {
-      width: 100%;
-      height: 400px;
-      border: none;
-      margin-top: 15px;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
+    .content { padding-bottom: 200px; }
+    .box { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+    .label { font-weight: bold; margin-bottom: 8px; }
+    .admin-box { margin: 20px 0; padding: 15px; border: 2px solid #007bff; border-radius: 6px; background: #e9f3ff; display: none; }
+    .admin-box button { padding: 10px 15px; font-size: 14px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 4px; }
+    .navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; display: flex; justify-content: space-around; align-items: center; background: #f1f1f1; border-top: 1px solid #ccc; }
+    .nav-item { text-align: center; flex: 1; font-size: 14px; cursor: pointer; color: #333; }
+    .nav-item:hover { color: #007bff; }
+    iframe { width: 100%; height: 400px; border: none; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -119,21 +64,20 @@
     <div class="nav-item">我的</div>
   </div>
 
-  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const account = params.get("account");
     if (account) document.getElementById("wallet").innerText = "钱包地址: " + account;
 
-    // === 合约 & 代币配置 ===
+    // 代币与池地址（与之前一致）
     const RONGCHAIN_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
-    const CRC_TOKEN = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
+    const CRC_TOKEN       = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
     const RONGCHAIN_USDT_PAIR = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
     const RONGCHAIN_CRC_PAIR  = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
 
-    // ✅ 更新为你部署的合约地址
-    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
+    // 合约地址（统一对齐）
+    const WHITELIST_CONTRACT  = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
 
     const erc20Abi = [
       "function decimals() view returns (uint8)",
@@ -142,22 +86,26 @@
     ];
     const whitelistAbi = ["function owner() view returns (address)"];
 
+    function checkAddress() {
+      if (account && ethers.utils.isAddress(account)) {
+        document.getElementById("addressStatus").innerText = "✅ 地址有效";
+      } else {
+        document.getElementById("addressStatus").innerText = "❌ 地址无效";
+      }
+    }
+
     async function checkAdmin() {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
         const owner = await contract.owner();
-        if (owner.toLowerCase() === account.toLowerCase()) {
+        if (owner.toLowerCase() === account?.toLowerCase()) {
           document.getElementById("adminBox").style.display = "block";
         }
-      } catch (e) {
-        console.error("管理员检测失败:", e.message);
-      }
+      } catch (e) { console.error("管理员检测失败:", e.message); }
     }
 
-    function goAdmin() {
-      window.location.href = "admin.html?account=" + account;
-    }
+    function goAdmin() { window.location.href = "admin.html?account=" + account; }
 
     async function fetchBalance(tokenAddr, elId) {
       try {
@@ -188,6 +136,7 @@
     }
 
     function refresh() {
+      checkAddress();
       checkAdmin();
       fetchBalance(RONGCHAIN_TOKEN, "balance");
       fetchBalance(CRC_TOKEN, "crcBalance");
