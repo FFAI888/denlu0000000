@@ -2,53 +2,248 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain DApp 首页</title>
+  <title>RongChain 首页（v1.29）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
-    .content { padding-bottom: 200px; }
-    .admin-box { display: none; margin: 20px 0; padding: 15px; border: 2px solid #007bff; border-radius: 6px; background: #e9f3ff; }
-    .admin-box button { padding: 10px 15px; font-size: 14px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 4px; }
+    body { font-family: Arial, sans-serif; padding: 18px; margin: 0; background: #f5f5f5; }
+    .ver { position: fixed; right: 12px; top: 10px; color:#999; font-size:12px;}
+    .topver { font-size:12px; color:#666; margin-bottom:8px;}
+    h1 { margin: 8px 0 16px; }
+    .content { padding-bottom: 120px; }
+    .box { margin: 14px 0; padding: 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+    .label { font-weight: bold; margin-bottom: 6px; }
+    .admin-box { margin: 14px 0; padding: 14px; border: 2px solid #007bff; border-radius: 8px; background: #e9f3ff; display: none; }
+    .admin-box button { padding: 10px 15px; font-size: 14px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 6px; }
+    .navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; display: flex; justify-content: space-around; align-items: center; background: #f1f1f1; border-top: 1px solid #ccc; }
+    .nav-item { text-align: center; flex: 1; font-size: 14px; cursor: pointer; color: #333; }
+    .nav-item:hover { color: #007bff; }
+    iframe { width: 100%; height: 420px; border: none; margin-top: 8px; border-radius:8px; }
+    .muted { color:#777; font-size: 12px; }
   </style>
 </head>
 <body>
+  <div class="ver">v1.29</div>
+  <div class="topver">最高版本：v1.29</div>
   <div class="content">
     <h1>RongChain 首页</h1>
-    <div id="wallet">钱包地址: 检测中...</div>
-    <div id="balance">余额: 检测中...</div>
-    <div id="price">价格: 检测中...</div>
+    <div id="wallet" class="muted">钱包地址: 检测中...</div>
+
+    <div class="box">
+      <div class="label">地址检测状态</div>
+      <div id="addressStatus" class="muted">正在检测中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">RongChain 余额</div>
+      <div id="balance" class="muted">检测中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">CRC 余额</div>
+      <div id="crcBalance" class="muted">检测中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">RongChain/USDT 价格</div>
+      <div id="price" class="muted">加载中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">RongChain/CRC 价格</div>
+      <div id="crcPrice" class="muted">加载中...</div>
+    </div>
 
     <div class="admin-box" id="adminBox">
-      <h3>管理员功能</h3>
+      <div class="label">管理员功能</div>
       <button onclick="goAdmin()">进入管理后台</button>
     </div>
+
+    <div class="box">
+      <div class="label">K 线行情 (示例: ETH/USDT)</div>
+      <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:ETHUSDT&interval=15&hidesidetoolbar=1&theme=light&style=1&timezone=Asia%2FShanghai"></iframe>
+      <div class="muted">※ 若后续有 TradingView 上线你的交易对，可换成对应符号。</div>
+    </div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item">首页</div>
+    <div class="nav-item">拼团</div>
+    <div class="nav-item">赚币</div>
+    <div class="nav-item">兑换</div>
+    <div class="nav-item">我的</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const account = params.get("account");
+    // ===== 配置（与你之前的一致）=====
+    const ACCOUNT_PARAM = new URLSearchParams(window.location.search).get("account");
+    const WHITELIST_CONTRACT   = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
+
+    const RONGCHAIN_TOKEN      = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e"; // RongChain
+    const CRC_TOKEN            = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087"; // CRC
+
+    const RONGCHAIN_USDT_PAIR  = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795"; // 池：RongChain/USDT
+    const RONGCHAIN_CRC_PAIR   = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5"; // 池：RongChain/CRC
+
+    const erc20Abi = [
+      "function decimals() view returns (uint8)",
+      "function symbol() view returns (string)",
+      "function balanceOf(address) view returns (uint256)"
+    ];
+    const whitelistAbi = ["function owner() view returns (address)"];
+
+    // UniswapV2 Pair ABI（用于 DexScreener 不可用时的回退）
+    const pairAbi = [
+      "function token0() view returns (address)",
+      "function token1() view returns (address)",
+      "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)"
+    ];
+
+    // ===== UI 初始化 =====
+    const account = ACCOUNT_PARAM;
     if (account) document.getElementById("wallet").innerText = "钱包地址: " + account;
 
-    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
-    const whitelistAbi = [ "function owner() view returns (address)" ];
-
-    async function checkAdmin() {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
-        const owner = await contract.owner();
-        if (owner.toLowerCase() === account?.toLowerCase()) {
-          document.getElementById("adminBox").style.display = "block";
-        }
-      } catch (e) { console.error("管理员检测失败:", e.message); }
+    function checkAddressValid() {
+      if (account && ethers.utils.isAddress(account)) {
+        document.getElementById("addressStatus").innerText = "✅ 地址有效";
+      } else {
+        document.getElementById("addressStatus").innerText = "❌ 地址无效或未登录";
+      }
     }
 
     function goAdmin() {
       window.location.href = "admin.html?account=" + account;
     }
 
-    checkAdmin();
+    // ===== 余额查询 =====
+    async function fetchBalance(tokenAddr, elId) {
+      try {
+        if (!window.ethereum || !account) throw new Error("未检测到钱包或未登录");
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(tokenAddr, erc20Abi, provider);
+        const [dec, sym, bal] = await Promise.all([
+          contract.decimals(),
+          contract.symbol(),
+          contract.balanceOf(account)
+        ]);
+        const formatted = ethers.utils.formatUnits(bal, dec);
+        document.getElementById(elId).innerText = formatted + " " + sym;
+      } catch (e) {
+        document.getElementById(elId).innerText = "❌ 余额获取失败";
+        console.error("余额获取失败:", e);
+      }
+    }
+
+    // ===== 价格查询（DexScreener 首选 + 合约回退） =====
+    async function fetchPriceDexScreenerPair(pairAddr) {
+      const url = "https://api.dexscreener.com/latest/dex/pairs/bsc/" + pairAddr;
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("DexScreener 响应异常");
+      const data = await res.json();
+      if (!data || !data.pairs || data.pairs.length === 0) throw new Error("DexScreener 未返回对");
+      return data.pairs[0]; // 包含 priceUsd、liquidity 等
+    }
+
+    async function fetchPriceFromOnchain(pairAddr, baseTokenAddr, quoteTokenAddr) {
+      // 以 quoteToken 为计价单位，返回 base/quote 的价格
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const pair = new ethers.Contract(pairAddr, pairAbi, provider);
+      const [t0, t1, reserves] = await Promise.all([pair.token0(), pair.token1(), pair.getReserves()]);
+      const token0 = t0.toLowerCase(), token1 = t1.toLowerCase();
+      const r0 = ethers.BigNumber.from(reserves.reserve0.toString());
+      const r1 = ethers.BigNumber.from(reserves.reserve1.toString());
+
+      // 读取代币 decimals
+      const t0c = new ethers.Contract(token0, erc20Abi, provider);
+      const t1c = new ethers.Contract(token1, erc20Abi, provider);
+      const [d0, d1] = await Promise.all([t0c.decimals(), t1c.decimals()]);
+
+      // 计算 base 相对 quote 的价格
+      const base = baseTokenAddr.toLowerCase();
+      const quote = quoteTokenAddr.toLowerCase();
+      let price; // base / quote
+      if (token0 === base && token1 === quote) {
+        // price = r1 / r0 * 10^(d0 - d1)
+        price = Number(ethers.utils.formatUnits(r1, d1)) / Number(ethers.utils.formatUnits(r0, d0));
+      } else if (token1 === base && token0 === quote) {
+        price = Number(ethers.utils.formatUnits(r0, d0)) / Number(ethers.utils.formatUnits(r1, d1));
+      } else {
+        throw new Error("配对不包含指定 base/quote");
+      }
+      return price;
+    }
+
+    async function updatePrices() {
+      // RongChain / USDT（DexScreener USD 直显；若失败，回退 on-chain 计算 USDT 计价）
+      try {
+        const pairInfo = await fetchPriceDexScreenerPair(RONGCHAIN_USDT_PAIR);
+        if (pairInfo && pairInfo.priceUsd) {
+          document.getElementById("price").innerText = `≈ ${pairInfo.priceUsd} USD`;
+        } else {
+          throw new Error("DexScreener 无 USD 字段");
+        }
+      } catch (e) {
+        console.warn("DexScreener USDT 失败，尝试链上：", e.message);
+        try {
+          // USDT (BSC) 地址：
+          const USDT = "0x55d398326f99059ff775485246999027b3197955";
+          const p = await fetchPriceFromOnchain(RONGCHAIN_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
+          document.getElementById("price").innerText = `≈ ${p.toFixed(6)} USDT`;
+        } catch (e2) {
+          document.getElementById("price").innerText = "❌ 价格获取失败";
+          console.error("USDT 价格失败：", e2);
+        }
+      }
+
+      // RongChain / CRC（DexScreener 无 USD；显示相对 CRC；失败回退链上）
+      try {
+        const pairInfo = await fetchPriceDexScreenerPair(RONGCHAIN_CRC_PAIR);
+        if (pairInfo && pairInfo.priceNative) {
+          // priceNative 通常是以链原生币计价；此处更稳妥展示 pair 中显示的 priceTokenX
+          const label = pairInfo.baseToken?.symbol && pairInfo.quoteToken?.symbol
+            ? `${pairInfo.baseToken.symbol}/${pairInfo.quoteToken.symbol}`
+            : "RongChain/CRC";
+          const px = pairInfo.price ?? pairInfo.priceNative; // price 是相对 quote 的价格（若提供）
+          document.getElementById("crcPrice").innerText = `≈ ${px}（${label}）`;
+        } else {
+          throw new Error("DexScreener 无直读字段");
+        }
+      } catch (e) {
+        console.warn("DexScreener CRC 失败，尝试链上：", e.message);
+        try {
+          const p = await fetchPriceFromOnchain(RONGCHAIN_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
+          document.getElementById("crcPrice").innerText = `≈ ${p.toFixed(6)} CRC`;
+        } catch (e2) {
+          document.getElementById("crcPrice").innerText = "❌ CRC 价格获取失败";
+          console.error("CRC 价格失败：", e2);
+        }
+      }
+    }
+
+    // ===== 管理员检测 =====
+    async function checkAdmin() {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
+        const owner = await contract.owner();
+        if (account && owner.toLowerCase() === account.toLowerCase()) {
+          document.getElementById("adminBox").style.display = "block";
+        }
+      } catch (e) { console.error("管理员检测失败:", e.message); }
+    }
+
+    // ===== 刷新调度（1 秒）=====
+    function refreshAll() {
+      checkAddressValid();
+      fetchBalance(RONGCHAIN_TOKEN, "balance");
+      fetchBalance(CRC_TOKEN, "crcBalance");
+      updatePrices();
+      checkAdmin();
+    }
+
+    // === 启动 ===
+    refreshAll();
+    setInterval(refreshAll, 1000);
   </script>
 </body>
 </html>
