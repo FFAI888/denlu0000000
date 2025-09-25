@@ -2,17 +2,18 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理后台（v1.51）</title>
+  <title>管理后台（v1.53）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <style>.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}</style>
+  <style>.grid2{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:960px){.grid2{grid-template-columns:1fr 1fr}}</style>
 </head>
 <body>
-  <div class="ver">v1.51</div>
-  <div class="topver">最高版本：v1.51</div>
+  <div class="ver">v1.53</div>
+  <div class="topver">最高版本：v1.53</div>
 
   <div class="content">
     <h1>管理后台</h1>
+
     <div class="box">
       <div class="label">连接状态</div>
       <div id="adminWallet" class="muted">钱包: 检测中...</div>
@@ -21,7 +22,7 @@
 
     <div class="box">
       <div class="label">访问控制合约地址（Ownable/Whitelist）</div>
-      <input id="accessAddr" class="input" placeholder="0x..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px">
+      <input id="accessAddr" class="input" placeholder="0x..." style="width:100%">
       <div style="margin-top:8px">
         <button onclick="saveAccess()">保存地址</button>
         <button onclick="loadAccess()">加载检测</button>
@@ -35,7 +36,7 @@
     <div class="grid2">
       <div class="box">
         <div class="label">白名单管理（若合约支持）</div>
-        <input id="wlAddr" placeholder="白名单地址 0x..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px">
+        <input id="wlAddr" placeholder="白名单地址 0x..." class="input" style="width:100%">
         <div style="margin-top:8px">
           <button onclick="addWL()">添加白名单</button>
           <button onclick="removeWL()">移除白名单</button>
@@ -46,7 +47,7 @@
 
       <div class="box">
         <div class="label">转移所有权（仅 owner）</div>
-        <input id="newOwner" placeholder="新 owner 地址 0x..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px">
+        <input id="newOwner" placeholder="新 owner 地址 0x..." class="input" style="width:100%">
         <div style="margin-top:8px">
           <button onclick="transferOwner()">转移所有权</button>
         </div>
@@ -74,6 +75,7 @@
     let provider, signer, myAddr = null, accessAddr = null, accessC = null, hasWhitelist = false, ownerAddr = null;
 
     function goHome(){ window.location.href = "home.html"; }
+    function showMsg(t){ document.getElementById('msg').innerText = t; }
 
     async function init(){
       if(!window.ethereum){ document.getElementById('adminWallet').innerText = "❌ 未检测到钱包"; return; }
@@ -82,11 +84,8 @@
       signer = provider.getSigner();
       myAddr = await signer.getAddress();
       document.getElementById('adminWallet').innerText = "钱包: " + myAddr;
-
       const net = await provider.getNetwork();
       document.getElementById('net').innerText = "网络: " + (net.name || "BSC/未知") + " (chainId=" + net.chainId + ")";
-
-      // 恢复上次保存的合约地址
       const saved = localStorage.getItem("access_contract");
       if(saved){ document.getElementById('accessAddr').value = saved; }
     }
@@ -98,8 +97,6 @@
       showMsg("✅ 已保存合约地址");
     }
 
-    function showMsg(t){ document.getElementById('msg').innerText = t; }
-
     async function loadAccess(){
       try{
         showMsg("");
@@ -107,7 +104,6 @@
         if(!ethers.utils.isAddress(accessAddr)){ return showMsg("❌ 无效的合约地址"); }
         accessC = new ethers.Contract(accessAddr, [...ownableAbi, ...whitelistAbi], signer);
 
-        // 读取 owner
         try{
           ownerAddr = await accessC.owner();
           document.getElementById('ownerInfo').innerText = "owner: " + ownerAddr;
@@ -116,21 +112,18 @@
           document.getElementById('ownerInfo').innerText = "owner(): 不可用（该合约可能非 Ownable）";
         }
 
-        // 检测白名单接口可用性
         try{
           const test = await accessC.callStatic.isWhitelisted(myAddr);
           hasWhitelist = (typeof test === "boolean");
           document.getElementById('wlInfo').innerText = "白名单支持: " + (hasWhitelist ? "✅ 是" : "❌ 否");
         }catch(_){ hasWhitelist = false; document.getElementById('wlInfo').innerText = "白名单支持: ❌ 否"; }
 
-        // 我的权限结果
         const isOwner = ownerAddr && (myAddr.toLowerCase() === ownerAddr.toLowerCase());
         let isWL = false;
         if(hasWhitelist){
           try{ isWL = await accessC.isWhitelisted(myAddr); }catch(_){}
         }
         document.getElementById('roleInfo').innerText = "你的权限: " + (isOwner ? "Owner（管理员）" : (isWL ? "白名单" : "普通用户"));
-
       }catch(e){ showMsg("加载失败: " + (e?.message || e)); }
     }
 
@@ -156,16 +149,6 @@
         const r = await tx.wait();
         document.getElementById('wlResult').innerText = "✅ 成功区块: " + r.blockNumber;
       }catch(e){ document.getElementById('wlResult').innerText = "❌ 失败: " + (e?.message || e); }
-    }
-
-    async function checkWL(){
-      if(!hasWhitelist) return showMsg("该合约不支持白名单接口");
-      const a = document.getElementById('wlAddr').value.trim();
-      if(!ethers.utils.isAddress(a)) return showMsg("无效地址");
-      try{
-        const ok = await accessC.isWhitelisted(a);
-        document.getElementById('wlResult').innerText = ok ? "✅ 在白名单" : "❌ 不在白名单";
-      }catch(e){ document.getElementById('wlResult').innerText = "❌ 查询失败: " + (e?.message || e); }
     }
 
     async function transferOwner(){
