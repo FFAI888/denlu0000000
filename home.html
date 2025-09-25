@@ -5,16 +5,26 @@
   <title>RongChain DApp 首页</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-    .content { padding-bottom: 200px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .content {
+      padding-bottom: 200px;
+    }
     .box {
       margin: 20px 0;
       padding: 15px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      background: #f9f9f9;
+      background: #fff;
     }
-    .label { font-weight: bold; margin-bottom: 8px; }
+    .label {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
     .admin-box {
       margin: 20px 0;
       padding: 15px;
@@ -44,9 +54,22 @@
       background: #f1f1f1;
       border-top: 1px solid #ccc;
     }
-    .nav-item { text-align: center; flex: 1; font-size: 14px; cursor: pointer; color: #333; }
-    .nav-item:hover { color: #007bff; }
-    iframe { width: 100%; height: 400px; border: none; margin-top: 15px; }
+    .nav-item {
+      text-align: center;
+      flex: 1;
+      font-size: 14px;
+      cursor: pointer;
+      color: #333;
+    }
+    .nav-item:hover {
+      color: #007bff;
+    }
+    iframe {
+      width: 100%;
+      height: 400px;
+      border: none;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
@@ -85,8 +108,7 @@
     </div>
 
     <h2>K 线行情 (RongChain/USDT)</h2>
-    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:ETHUSDT&interval=15&hidesidetoolbar=1&theme=light&style=1&timezone=Asia%2FShanghai"
-            allowtransparency="true" scrolling="no"></iframe>
+    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:ETHUSDT&interval=15&hidesidetoolbar=1&theme=light&style=1&timezone=Asia%2FShanghai"></iframe>
   </div>
 
   <div class="navbar">
@@ -104,11 +126,12 @@
     const account = params.get("account");
     if (account) document.getElementById("wallet").innerText = "钱包地址: " + account;
 
+    // === 合约 & 代币配置 ===
     const RONGCHAIN_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
-    const CRC_TOKEN       = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
+    const CRC_TOKEN = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
     const RONGCHAIN_USDT_PAIR = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
     const RONGCHAIN_CRC_PAIR  = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
-    const WHITELIST_CONTRACT  = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722";
+    const WHITELIST_CONTRACT = "0xa1852413ca02e6d2f653dd88586eae822e790d96b1e1aabcfc9d0a70b1175c66";
 
     const erc20Abi = [
       "function decimals() view returns (uint8)",
@@ -116,14 +139,6 @@
       "function balanceOf(address) view returns (uint256)"
     ];
     const whitelistAbi = ["function owner() view returns (address)"];
-
-    function checkAddress() {
-      if (account && ethers.utils.isAddress(account)) {
-        document.getElementById("addressStatus").innerText = "✅ 地址有效";
-      } else {
-        document.getElementById("addressStatus").innerText = "❌ 地址无效";
-      }
-    }
 
     async function checkAdmin() {
       try {
@@ -133,10 +148,14 @@
         if (owner.toLowerCase() === account.toLowerCase()) {
           document.getElementById("adminBox").style.display = "block";
         }
-      } catch (e) { console.error("管理员检测失败:", e.message); }
+      } catch (e) {
+        console.error("管理员检测失败:", e.message);
+      }
     }
 
-    function goAdmin() { window.location.href = "admin.html?account=" + account; }
+    function goAdmin() {
+      window.location.href = "admin.html?account=" + account;
+    }
 
     async function fetchBalance(tokenAddr, elId) {
       try {
@@ -148,7 +167,7 @@
         const formatted = ethers.utils.formatUnits(balance, decimals);
         document.getElementById(elId).innerText = formatted + " " + symbol;
       } catch (e) {
-        document.getElementById(elId).innerText = "❌ 余额获取失败: " + e.message;
+        document.getElementById(elId).innerText = "❌ 余额获取失败";
       }
     }
 
@@ -157,18 +176,16 @@
         const res = await fetch("https://api.dexscreener.com/latest/dex/pairs/bsc/" + pairAddr);
         const data = await res.json();
         if (data && data.pairs && data.pairs.length > 0) {
-          const priceUsd = data.pairs[0].priceUsd;
-          document.getElementById(elId).innerText = label + ": " + priceUsd + " USD";
+          document.getElementById(elId).innerText = label + ": " + data.pairs[0].priceUsd + " USD";
         } else {
           document.getElementById(elId).innerText = "⚠️ 未找到 " + label;
         }
       } catch (e) {
-        document.getElementById(elId).innerText = "❌ 获取失败: " + e.message;
+        document.getElementById(elId).innerText = "❌ 获取失败";
       }
     }
 
     function refresh() {
-      checkAddress();
       checkAdmin();
       fetchBalance(RONGCHAIN_TOKEN, "balance");
       fetchBalance(CRC_TOKEN, "crcBalance");
