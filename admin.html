@@ -1,51 +1,142 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <title>RongChain DApp 登录</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>RongChain 管理后台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; margin: 0; background: #f5f5f5; }
-    h1 { margin-bottom: 30px; }
-    button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 6px; }
+    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .box { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+    .label { font-weight: bold; margin-bottom: 8px; }
+    input { padding: 8px; width: 80%; margin-bottom: 10px; }
+    button { padding: 8px 16px; font-size: 14px; margin-right: 5px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: #fff; }
     button:hover { background: #0056b3; }
-    #status { margin-top: 20px; font-weight: bold; font-size: 15px; color: #333; }
+    #status { margin-top: 15px; font-weight: bold; color: #333; }
+    .back { margin-top: 20px; text-align: center; }
+    .back button { background: #28a745; }
+    .back button:hover { background: #1c7c31; }
   </style>
 </head>
 <body>
-  <h1>RongChain DApp 登录</h1>
-  <button id="connectBtn">连接钱包</button>
-  <div id="status">等待连接...</div>
+  <h1>RongChain 管理后台</h1>
+
+  <div class="box">
+    <div class="label">当前管理员地址</div>
+    <div id="currentOwner">检测中...</div>
+  </div>
+
+  <div class="box">
+    <div class="label">我的身份</div>
+    <div id="myRole">检测中...</div>
+  </div>
+
+  <div class="box">
+    <div class="label">白名单管理</div>
+    <input type="text" id="whitelistAddress" placeholder="输入用户地址">
+    <br />
+    <button onclick="addWhitelist()">添加白名单</button>
+    <button onclick="removeWhitelist()">移除白名单</button>
+  </div>
+
+  <div class="box">
+    <div class="label">转移管理员权限</div>
+    <input type="text" id="newOwnerAddress" placeholder="输入新管理员地址">
+    <br />
+    <button onclick="transferOwnership()">转移权限</button>
+  </div>
+
+  <div id="status">状态: 等待操作...</div>
+
+  <div class="back">
+    <button onclick="goHome()">返回首页</button>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
-    const whitelistAbi = [ "function isWhitelisted(address user) view returns (bool)" ];
+    const whitelistAbi = [
+      "function owner() view returns (address)",
+      "function addWhitelist(address user) public",
+      "function removeWhitelist(address user) public",
+      "function transferOwnership(address newOwner) public"
+    ];
 
-    document.getElementById("connectBtn").onclick = async () => {
+    let provider, signer, contract, account;
+
+    async function init() {
       if (!window.ethereum) {
-        alert("❌ 请先安装 MetaMask 或 OKX 钱包");
+        alert("请先安装 MetaMask 或 OKX 钱包");
         return;
       }
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, signer);
+
+      const params = new URLSearchParams(window.location.search);
+      account = params.get("account");
+
+      fetchOwner();
+    }
+
+    async function fetchOwner() {
       try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        const account = accounts[0];
-        document.getElementById("status").innerText = "✅ 已连接: " + account;
+        const owner = await contract.owner();
+        document.getElementById("currentOwner").innerText = owner;
 
-        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
-        const allowed = await contract.isWhitelisted(account);
-
-        if (allowed) {
-          document.getElementById("status").innerText = "✅ 白名单验证通过，正在进入首页...";
-          setTimeout(() => { window.location.href = "home.html?account=" + account; }, 800);
+        const currentAccount = await signer.getAddress();
+        if (currentAccount.toLowerCase() === owner.toLowerCase()) {
+          document.getElementById("myRole").innerText = "✅ 你是管理员";
+          document.getElementById("myRole").style.color = "green";
         } else {
-          document.getElementById("status").innerText = "❌ 该地址不在白名单，禁止访问首页";
+          document.getElementById("myRole").innerText = "❌ 你是普通用户";
+          document.getElementById("myRole").style.color = "red";
         }
-      } catch (err) {
-        document.getElementById("status").innerText = "❌ 连接失败: " + err.message;
+      } catch (e) {
+        document.getElementById("currentOwner").innerText = "❌ 查询失败: " + e.message;
+        document.getElementById("myRole").innerText = "❌ 无法检测身份";
       }
-    };
+    }
+
+    async function addWhitelist() {
+      try {
+        const address = document.getElementById("whitelistAddress").value;
+        const tx = await contract.addWhitelist(address);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ 成功添加: " + address;
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ 添加失败: " + e.message;
+      }
+    }
+
+    async function removeWhitelist() {
+      try {
+        const address = document.getElementById("whitelistAddress").value;
+        const tx = await contract.removeWhitelist(address);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ 已移除: " + address;
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ 移除失败: " + e.message;
+      }
+    }
+
+    async function transferOwnership() {
+      try {
+        const newOwner = document.getElementById("newOwnerAddress").value;
+        const tx = await contract.transferOwnership(newOwner);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ 管理员已转移到: " + newOwner;
+        fetchOwner();
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ 转移失败: " + e.message;
+      }
+    }
+
+    function goHome() {
+      window.location.href = "home.html?account=" + account;
+    }
+
+    init();
   </script>
 </body>
 </html>
