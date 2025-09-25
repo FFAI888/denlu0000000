@@ -1,5 +1,5 @@
 // v1.75 管理后台脚本
-// 功能：全局权限拦截、显示管理员提示、白名单管理、所有权转移、事件监听、日志、白名单列表
+// 功能：全局权限拦截、显示管理员提示、白名单管理、所有权转移、事件监听、日志、白名单列表、查询 Owner
 
 (async function () {
   "use strict";
@@ -97,6 +97,17 @@
       ownerEl.innerText = "合约 Owner: " + newOwner;
     } catch (e) {
       alert("转移失败: " + e.message);
+    }
+  };
+
+  // ===== 查询 Owner 按钮功能 =====
+  window.checkOwner = async () => {
+    const resultDiv = document.getElementById("ownerResult");
+    try {
+      const owner = await contract.owner();
+      resultDiv.innerText = "✅ 当前合约 Owner 地址: " + owner;
+    } catch (e) {
+      resultDiv.innerText = "❌ 查询失败: " + e.message;
     }
   };
 
