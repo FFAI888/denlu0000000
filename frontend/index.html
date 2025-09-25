@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>RongChain DApp 登录</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; margin: 0; background: #f5f5f5; }
+    h1 { margin-bottom: 30px; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 6px; }
+    button:hover { background: #0056b3; }
+    #status { margin-top: 20px; font-weight: bold; font-size: 15px; color: #333; }
+  </style>
+</head>
+<body>
+  <h1>RongChain DApp 登录</h1>
+  <button id="connectBtn">连接钱包</button>
+  <div id="status">等待连接...</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script>
+    // 与合约保持一致的正式地址
+    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
+    const whitelistAbi = [
+      "function isWhitelisted(address user) view returns (bool)"
+    ];
+
+    document.getElementById("connectBtn").onclick = async () => {
+      if (!window.ethereum) {
+        alert("❌ 请先安装 MetaMask 或 OKX 钱包");
+        return;
+      }
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        const account = accounts[0];
+        document.getElementById("status").innerText = "✅ 已连接: " + account;
+
+        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
+        const allowed = await contract.isWhitelisted(account);
+
+        if (allowed) {
+          document.getElementById("status").innerText = "✅ 白名单验证通过，正在进入首页...";
+          setTimeout(() => { window.location.href = "home.html?account=" + account; }, 800);
+        } else {
+          document.getElementById("status").innerText = "❌ 该地址不在白名单，禁止访问首页";
+        }
+      } catch (err) {
+        document.getElementById("status").innerText = "❌ 连接失败: " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>
