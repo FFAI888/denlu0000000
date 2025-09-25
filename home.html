@@ -2,45 +2,86 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>首页 - RongChain Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .chart { margin: 20px 0; border: 1px solid #ccc; }
-    button { margin-right: 10px; padding: 5px 10px; }
-  </style>
+  <title>RongChain 首页（v1.55）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="ver">v1.55</div>
+  <div class="topver">最高版本：v1.55</div>
 
-  <h1>📊 RongChain 实时行情</h1>
+  <div class="content">
+    <h1>RongChain 首页</h1>
+    <div id="wallet" class="muted">钱包地址: 检测中...</div>
 
-  <div id="wallet">钱包地址: 检测中...</div>
-  <div id="addressStatus">状态: 检测中...</div>
+    <div class="box">
+      <div class="label">地址检测状态</div>
+      <div id="addressStatus" class="muted">正在检测中...</div>
+    </div>
 
-  <h2>RongChain (RONG)</h2>
-  <p id="price">价格检测中...</p>
-  <div id="rongChart" class="chart" style="height:400px;"></div>
-  <div id="rongVolume" class="chart" style="height:150px;"></div>
+    <div class="row">
+      <div class="box">
+        <div class="label">RongChain 余额</div>
+        <div id="balance" class="muted">检测中...</div>
+      </div>
+      <div class="box">
+        <div class="label">CRC 余额</div>
+        <div id="crcBalance" class="muted">检测中...</div>
+      </div>
+    </div>
 
-  <h2>CRC (推导自 RONG)</h2>
-  <p id="crcPrice">价格检测中...</p>
-  <div id="crcChart" class="chart" style="height:400px;"></div>
-  <div id="crcVolume" class="chart" style="height:150px;"></div>
+    <div class="box">
+      <div class="label">刷新间隔设置</div>
+      <div class="refresh-buttons" id="refreshBtns">
+        <button onclick="setRefresh(1000)" id="r1000">1 秒</button>
+        <button onclick="setRefresh(3000)" id="r3000">3 秒</button>
+        <button onclick="setRefresh(5000)" id="r5000">5 秒</button>
+        <button onclick="setRefresh(10000)" id="r10000">10 秒</button>
+      </div>
+      <div class="muted">当前刷新间隔: <span id="curInterval"></span></div>
+    </div>
 
-  <!-- 周期切换按钮 -->
-  <div style="margin:10px 0;">
-    <button onclick="setTimeframe(1)">分钟</button>
-    <button onclick="setTimeframe(60)">日线</button>
-    <button onclick="setTimeframe(60*24*7)">周线</button>
-    <button onclick="setTimeframe(60*24*30)">月线</button>
+    <div class="row">
+      <div class="box">
+        <div class="label">RongChain / USDT 现价</div>
+        <div id="price" class="muted">加载中...</div>
+      </div>
+      <div class="box">
+        <div class="label">RongChain / CRC 现价（推导 USDT）</div>
+        <div id="crcPrice" class="muted">加载中...</div>
+      </div>
+    </div>
+
+    <!-- DexScreener 内嵌图表（RONG/USDT） -->
+    <div class="box">
+      <div class="label">RongChain 实时行情图（DexScreener）</div>
+      <iframe src="https://dexscreener.com/bsc/0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795?embed=1&theme=light&trades=0&info=0"
+              width="100%" height="600" frameborder="0"></iframe>
+    </div>
+
+    <!-- DexScreener 内嵌图表（RONG/CRC，如果池子有收录） -->
+    <div class="box">
+      <div class="label">RongChain / CRC 实时行情图（DexScreener）</div>
+      <iframe src="https://dexscreener.com/bsc/0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5?embed=1&theme=light&trades=0&info=0"
+              width="100%" height="600" frameborder="0"></iframe>
+      <div class="muted">⚠️ 如果 CRC 池子未被 DexScreener 收录，这里可能显示空白。</div>
+    </div>
+
+    <div class="admin-box">
+      <div class="label">管理员功能</div>
+      <button onclick="goAdmin()">进入管理后台</button>
+    </div>
   </div>
 
-  <!-- 调试日志区域 -->
-  <div id="debugLog" style="background:#000;color:#0f0;padding:10px;font-size:12px;max-height:150px;overflow:auto;">
-    📜 调试日志:
+  <div class="navbar">
+    <div class="nav-item">首页</div>
+    <div class="nav-item">拼团</div>
+    <div class="nav-item">赚币</div>
+    <div class="nav-item">兑换</div>
+    <div class="nav-item">我的</div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
