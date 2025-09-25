@@ -2,77 +2,45 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 首页（v1.58 调试版）</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="ver">v1.58</div>
-  <div class="topver">最高版本：v1.58</div>
-
-  <div class="content">
-    <h1>RongChain 首页</h1>
-    <div id="wallet" class="muted">钱包地址: 检测中...</div>
-
-    <div class="box">
-      <div class="label">地址检测状态</div>
-      <div id="addressStatus" class="muted">正在检测中...</div>
-    </div>
-
-    <div class="row">
-      <div class="box">
-        <div class="label">RongChain 余额</div>
-        <div id="balance" class="muted">检测中...</div>
-      </div>
-      <div class="box">
-        <div class="label">CRC 余额</div>
-        <div id="crcBalance" class="muted">检测中...</div>
-      </div>
-    </div>
-
-    <div class="box">
-      <div class="label">刷新间隔设置</div>
-      <div class="refresh-buttons" id="refreshBtns">
-        <button onclick="setRefresh(1000)" id="r1000">1 秒</button>
-        <button onclick="setRefresh(3000)" id="r3000">3 秒</button>
-        <button onclick="setRefresh(5000)" id="r5000">5 秒</button>
-        <button onclick="setRefresh(10000)" id="r10000">10 秒</button>
-      </div>
-      <div class="muted">当前刷新间隔: <span id="curInterval"></span></div>
-    </div>
-
-    <!-- RONG 行情图 -->
-    <div class="box">
-      <div class="label">RongChain 实时行情图（RONG/USDT）</div>
-      <div id="rongChart" class="chart"></div>
-      <div class="muted">数据源：链上 PancakeSwap 池子实时价格。</div>
-    </div>
-
-    <!-- CRC 行情图 -->
-    <div class="box">
-      <div class="label">CRC 实时行情图（推导 USDT 价格）</div>
-      <div id="crcChart" class="chart"></div>
-      <div id="crcVolume" class="chart" style="height:150px;"></div>
-      <div class="muted">⚠️ 此图基于链上 RONG/USDT 与 RONG/CRC 推导，不代表真实成交量。</div>
-    </div>
-
-    <div class="admin-box">
-      <div class="label">管理员功能</div>
-      <button onclick="goAdmin()">进入管理后台</button>
-    </div>
-  </div>
-
-  <div class="navbar">
-    <div class="nav-item">首页</div>
-    <div class="nav-item">拼团</div>
-    <div class="nav-item">赚币</div>
-    <div class="nav-item">兑换</div>
-    <div class="nav-item">我的</div>
-  </div>
-
-  <!-- 确保引入顺序：先 LightweightCharts 再 app.js -->
+  <title>首页 - RongChain Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .chart { margin: 20px 0; border: 1px solid #ccc; }
+    button { margin-right: 10px; padding: 5px 10px; }
+  </style>
+</head>
+<body>
+
+  <h1>📊 RongChain 实时行情</h1>
+
+  <div id="wallet">钱包地址: 检测中...</div>
+  <div id="addressStatus">状态: 检测中...</div>
+
+  <h2>RongChain (RONG)</h2>
+  <p id="price">价格检测中...</p>
+  <div id="rongChart" class="chart" style="height:400px;"></div>
+  <div id="rongVolume" class="chart" style="height:150px;"></div>
+
+  <h2>CRC (推导自 RONG)</h2>
+  <p id="crcPrice">价格检测中...</p>
+  <div id="crcChart" class="chart" style="height:400px;"></div>
+  <div id="crcVolume" class="chart" style="height:150px;"></div>
+
+  <!-- 周期切换按钮 -->
+  <div style="margin:10px 0;">
+    <button onclick="setTimeframe(1)">分钟</button>
+    <button onclick="setTimeframe(60)">日线</button>
+    <button onclick="setTimeframe(60*24*7)">周线</button>
+    <button onclick="setTimeframe(60*24*30)">月线</button>
+  </div>
+
+  <!-- 调试日志区域 -->
+  <div id="debugLog" style="background:#000;color:#0f0;padding:10px;font-size:12px;max-height:150px;overflow:auto;">
+    📜 调试日志:
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
