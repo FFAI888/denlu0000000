@@ -1,6 +1,5 @@
-/* v1.54 首页逻辑：余额 + 价格 + 链上实时双K线 + 刷新间隔 + 本地缓存 */
+/* v1.57 首页逻辑：余额 + 价格 + 链上实时行情 + K 线图 + CRC 成交量模拟（绿涨红跌） */
 
-// 代币与池子（BSC）
 const RONGCHAIN_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
 const CRC_TOKEN       = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
 const USDT            = "0x55d398326f99059ff775485246999027b3197955";
@@ -21,7 +20,7 @@ const pairAbi = [
 let provider = null;
 const ACCOUNT = localStorage.getItem("walletAddress") || null;
 
-// —— UI 基础 —— //
+// —— UI —— //
 function showWallet(){
   const el = document.getElementById("wallet");
   if (el) el.innerText = ACCOUNT ? ("钱包地址: " + ACCOUNT) : "钱包地址: 未登录";
@@ -76,12 +75,12 @@ async function priceFromPair(pairAddr, base, quote){
   return Number(ethers.utils.formatUnits(res[0], d0)) / Number(ethers.utils.formatUnits(res[1], d1));
 }
 
-// —— K 线图 —— //
-function createChart(containerId){
+// —— 图表工具 —— //
+function createChart(containerId,height=400){
   const el = document.getElementById(containerId);
   if (!el) return null;
   return LightweightCharts.createChart(el, {
-    width: el.clientWidth, height: 400,
+    width: el.clientWidth, height: height,
     layout: { background: { color: "#fff" }, textColor: "#000" },
     grid: { vertLines: { color: "#eee" }, horzLines: { color: "#eee" } },
     timeScale: { timeVisible: true, secondsVisible: false }
@@ -110,7 +109,7 @@ class CandleBuffer {
   }
 }
 
-// RONG 图表
+// —— RONG 图表 —— //
 let rChart=null, rSeries=null, rBuf=null, rTF=parseInt(localStorage.getItem("rong_tf")||1);
 function initRongChart(){
   rChart = createChart("rongChart");
@@ -123,20 +122,52 @@ function initRongChart(){
 }
 function switchRongTF(min){ rTF=min; localStorage.setItem("rong_tf",min); rSeries.setData(rBuf.candles); markActive("rfBtns","rbtn"+min); }
 
-// CRC 图表
+// —— CRC 图表 + 成交量（绿涨红跌） —— //
 let cChart=null, cSeries=null, cBuf=null, cTF=parseInt(localStorage.getItem("crc_tf")||1);
+let cVolChart=null, cVolSeries=null;
+
 function initCrcChart(){
   cChart = createChart("crcChart");
   if (!cChart) return;
+
   cSeries = cChart.addCandlestickSeries();
   cBuf = new CandleBuffer("candles_crc_usdt");
   if(cBuf.candles.length) cSeries.setData(cBuf.candles);
-  markActive("cfBtns","cbtn"+cTF);
-  window.addEventListener('resize', ()=>{ cChart.applyOptions({ width: document.getElementById('crcChart').clientWidth }); });
-}
-function switchCrcTF(min){ cTF=min; localStorage.setItem("crc_tf",min); cSeries.setData(cBuf.candles); markActive("cfBtns","cbtn"+min); }
 
-// 高亮按钮
+  const volEl = document.getElementById("crcVolume");
+  cVolChart = createChart("crcVolume",150);
+  cVolSeries = cVolChart.addHistogramSeries({ priceFormat: { type: "volume" } });
+
+  if(cBuf.candles.length){
+    cVolSeries.setData(cBuf.candles.map(c=>({
+      time: c.time,
+      value: Math.abs(c.close-c.open)*1000,
+      color: c.close>=c.open ? "#26a69a" : "#ef5350"
+    })));
+  }
+
+  markActive("cfBtns","cbtn"+cTF);
+  window.addEventListener('resize', ()=>{
+    cChart.applyOptions({ width: document.getElementById('crcChart').clientWidth });
+    cVolChart.applyOptions({ width: document.getElementById('crcVolume').clientWidth });
+  });
+}
+
+function switchCrcTF(min){
+  cTF=min;
+  localStorage.setItem("crc_tf",min);
+  cSeries.setData(cBuf.candles);
+  if(cVolSeries){
+    cVolSeries.setData(cBuf.candles.map(c=>({
+      time:c.time,
+      value:Math.abs(c.close-c.open)*1000,
+      color:c.close>=c.open ? "#26a69a" : "#ef5350"
+    })));
+  }
+  markActive("cfBtns","cbtn"+min);
+}
+
+// —— 高亮按钮 —— //
 function markActive(groupId,activeId){
   document.querySelectorAll("#"+groupId+" button").forEach(b=>b.classList.remove("active"));
   const el = document.getElementById(activeId); if(el) el.classList.add("active");
@@ -155,27 +186,35 @@ function setRefresh(ms){
   restartTimers();
 }
 
-// —— 每次刷新 —— //
+// —— 刷新一次 —— //
 async function tickOnce(){
   showWallet();
   fetchBalance(RONGCHAIN_TOKEN, "balance");
   fetchBalance(CRC_TOKEN,  "crcBalance");
 
   try{
-    // RONG/USDT
     const pRU = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
     document.getElementById("price").innerText = `≈ ${pRU.toFixed(6)} USDT`;
 
-    // RONG/CRC 与 CRC≈USDT 推导
     const pRC = await priceFromPair(RONG_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
     const crcUsdt = pRU / pRC;
     document.getElementById("crcPrice").innerText = `${pRC.toFixed(6)} CRC（≈ ${crcUsdt.toFixed(6)} USDT）`;
 
-    // 更新 K 线（RONG）
+    // RONG 更新
     if(rBuf && rSeries){ const arr = rBuf.update(pRU, rTF); rSeries.setData(arr); }
 
-    // 更新 K 线（CRC）
-    if(cBuf && cSeries){ const arr = cBuf.update(crcUsdt, cTF); cSeries.setData(arr); }
+    // CRC 更新
+    if(cBuf && cSeries){
+      const arr = cBuf.update(crcUsdt, cTF);
+      cSeries.setData(arr);
+      if(cVolSeries){
+        cVolSeries.setData(arr.map(c=>({
+          time:c.time,
+          value:Math.abs(c.close-c.open)*1000,
+          color:c.close>=c.open ? "#26a69a" : "#ef5350"
+        })));
+      }
+    }
   }catch(e){
     console.error("价格或行情更新失败", e);
   }
