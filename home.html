@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 首页（v1.30）</title>
+  <title>RongChain 首页（v1.41）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 18px; margin: 0; background: #f5f5f5; }
@@ -19,11 +19,14 @@
     .nav-item:hover { color: #007bff; }
     iframe { width: 100%; height: 420px; border: none; margin-top: 8px; border-radius:8px; }
     .muted { color:#777; font-size: 12px; }
+    .timeframe-buttons button { margin: 4px 6px 0 0; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+    .timeframe-buttons button.active { background: #007bff; color:#fff; border:none; border-radius:4px; }
+    #chart { width: 100%; height: 400px; }
   </style>
 </head>
 <body>
-  <div class="ver">v1.30</div>
-  <div class="topver">最高版本：v1.30</div>
+  <div class="ver">v1.41</div>
+  <div class="topver">最高版本：v1.41</div>
   <div class="content">
     <h1>RongChain 首页</h1>
     <div id="wallet" class="muted">钱包地址: 检测中...</div>
@@ -49,24 +52,28 @@
     </div>
 
     <div class="box">
-      <div class="label">RongChain/CRC 价格</div>
+      <div class="label">RongChain/CRC 价格（含推导 USDT）</div>
       <div id="crcPrice" class="muted">加载中...</div>
     </div>
 
+    <!-- 📊 实时 K 线图 -->
     <div class="box">
-      <div class="label">CRC/USDT 推导价格</div>
-      <div id="crcUsdtPrice" class="muted">加载中...</div>
+      <div class="label">RongChain 实时 K 线</div>
+      <div class="timeframe-buttons">
+        <button onclick="switchTimeframe(1)" id="btn1">1 分钟</button>
+        <button onclick="switchTimeframe(5)" id="btn5">5 分钟</button>
+        <button onclick="switchTimeframe(15)" id="btn15">15 分钟</button>
+        <button onclick="switchTimeframe(60)" id="btn60">1 小时</button>
+        <button onclick="switchTimeframe(1440)" id="btn1440">日线</button>
+        <button onclick="switchTimeframe(10080)" id="btn10080">周线</button>
+        <button onclick="switchTimeframe(43200)" id="btn43200">月线</button>
+      </div>
+      <div id="chart"></div>
     </div>
 
     <div class="admin-box" id="adminBox">
       <div class="label">管理员功能</div>
       <button onclick="goAdmin()">进入管理后台</button>
-    </div>
-
-    <div class="box">
-      <div class="label">K 线行情 (示例: ETH/USDT)</div>
-      <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:ETHUSDT&interval=15&hidesidetoolbar=1&theme=light&style=1&timezone=Asia%2FShanghai"></iframe>
-      <div class="muted">※ 若后续有 TradingView 上线你的交易对，可换成对应符号。</div>
     </div>
   </div>
 
@@ -79,24 +86,20 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <script>
     // ===== 配置 =====
     const ACCOUNT_PARAM = new URLSearchParams(window.location.search).get("account");
-    const WHITELIST_CONTRACT   = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
-
-    const RONGCHAIN_TOKEN      = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e"; // RongChain
-    const CRC_TOKEN            = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087"; // CRC
-    const USDT                 = "0x55d398326f99059ff775485246999027b3197955"; // BSC USDT
-
+    const RONGCHAIN_TOKEN      = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
+    const CRC_TOKEN            = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
+    const USDT                 = "0x55d398326f99059ff775485246999027b3197955";
     const RONGCHAIN_USDT_PAIR  = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
-    const RONGCHAIN_CRC_PAIR   = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
 
     const erc20Abi = [
       "function decimals() view returns (uint8)",
       "function symbol() view returns (string)",
       "function balanceOf(address) view returns (uint256)"
     ];
-    const whitelistAbi = ["function owner() view returns (address)"];
     const pairAbi = [
       "function token0() view returns (address)",
       "function token1() view returns (address)",
@@ -136,7 +139,7 @@
       }
     }
 
-    // ===== 价格：链上计算 =====
+    // ===== 价格 =====
     async function fetchPriceFromOnchain(pairAddr, baseTokenAddr, quoteTokenAddr) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const pair = new ethers.Contract(pairAddr, pairAbi, provider);
@@ -158,57 +161,74 @@
       }
     }
 
-    let rongUsdt = null;
-    let rongCrc = null;
+    // ===== 实时 K 线逻辑 =====
+    let chart = null;
+    let candleSeries = null;
+    let candles = [];
+    let currentBucket = null;
+    let timeframe = 1440; // 默认日线
 
-    async function updatePrices() {
-      try {
-        rongUsdt = await fetchPriceFromOnchain(RONGCHAIN_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
-        document.getElementById("price").innerText = `≈ ${rongUsdt.toFixed(6)} USDT`;
-      } catch {
-        document.getElementById("price").innerText = "❌ 获取失败";
+    function initChart() {
+      if (chart) chart.remove();
+      chart = LightweightCharts.createChart(document.getElementById('chart'), { width: document.getElementById('chart').clientWidth, height: 400 });
+      candleSeries = chart.addCandlestickSeries();
+    }
+
+    function resizeChart() {
+      if (chart) {
+        chart.applyOptions({ width: document.getElementById('chart').clientWidth });
       }
+    }
+    window.addEventListener('resize', resizeChart);
 
-      try {
-        rongCrc = await fetchPriceFromOnchain(RONGCHAIN_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
-        document.getElementById("crcPrice").innerText = `≈ ${rongCrc.toFixed(6)} CRC`;
-      } catch {
-        document.getElementById("crcPrice").innerText = "❌ 获取失败";
-      }
+    function switchTimeframe(min) {
+      timeframe = min;
+      localStorage.setItem("rongchain_timeframe", min); // 记住用户选择
+      candles = [];
+      currentBucket = null;
+      candleSeries.setData([]);
+      document.querySelectorAll('.timeframe-buttons button').forEach(b => b.classList.remove("active"));
+      document.getElementById("btn"+min).classList.add("active");
+    }
 
+    async function updateCandle() {
       try {
-        if (rongUsdt && rongCrc) {
-          const crcUsdt = rongUsdt / rongCrc;
-          document.getElementById("crcUsdtPrice").innerText = `≈ ${crcUsdt.toFixed(6)} USDT`;
+        const price = await fetchPriceFromOnchain(RONGCHAIN_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
+        const now = new Date();
+        const bucket = Math.floor(now.getTime() / (timeframe * 60000));
+        if (currentBucket !== bucket) {
+          currentBucket = bucket;
+          candles.push({ time: Math.floor(now.getTime() / 1000), open: price, high: price, low: price, close: price });
         } else {
-          document.getElementById("crcUsdtPrice").innerText = "等待数据...";
+          const c = candles[candles.length - 1];
+          c.high = Math.max(c.high, price);
+          c.low = Math.min(c.low, price);
+          c.close = price;
         }
-      } catch {
-        document.getElementById("crcUsdtPrice").innerText = "❌ 推导失败";
-      }
+        candleSeries.setData(candles);
+      } catch (e) { console.log("价格获取失败", e); }
     }
 
-    async function checkAdmin() {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
-        const owner = await contract.owner();
-        if (account && owner.toLowerCase() === account.toLowerCase()) {
-          document.getElementById("adminBox").style.display = "block";
-        }
-      } catch {}
-    }
-
+    // ===== 定时任务 =====
     function refreshAll() {
       checkAddressValid();
       fetchBalance(RONGCHAIN_TOKEN, "balance");
       fetchBalance(CRC_TOKEN, "crcBalance");
-      updatePrices();
-      checkAdmin();
+    }
+
+    initChart();
+
+    // 从 localStorage 恢复用户上次选择的周期
+    const saved = localStorage.getItem("rongchain_timeframe");
+    if (saved) {
+      switchTimeframe(Number(saved));
+    } else {
+      switchTimeframe(1440); // 默认日线
     }
 
     refreshAll();
     setInterval(refreshAll, 1000);
+    setInterval(updateCandle, 10000);
   </script>
 </body>
 </html>
