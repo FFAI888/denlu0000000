@@ -2,30 +2,45 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 首页（v1.52）</title>
+  <title>RongChain 首页（v1.53）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="ver">v1.52</div>
-  <div class="topver">最高版本：v1.52</div>
+  <div class="ver">v1.53</div>
+  <div class="topver">最高版本：v1.53</div>
 
   <div class="content">
     <h1>RongChain 首页</h1>
     <div id="wallet" class="muted">钱包地址: 检测中...</div>
 
-    <!-- 余额显示 -->
     <div class="box">
-      <div class="label">RongChain 余额</div>
-      <div id="balance" class="muted">检测中...</div>
+      <div class="label">地址检测状态</div>
+      <div id="addressStatus" class="muted">正在检测中...</div>
+    </div>
+
+    <div class="row">
+      <div class="box">
+        <div class="label">RongChain 余额</div>
+        <div id="balance" class="muted">检测中...</div>
+      </div>
+      <div class="box">
+        <div class="label">CRC 余额</div>
+        <div id="crcBalance" class="muted">检测中...</div>
+      </div>
     </div>
 
     <div class="box">
-      <div class="label">CRC 余额</div>
-      <div id="crcBalance" class="muted">检测中...</div>
+      <div class="label">刷新间隔设置</div>
+      <div class="refresh-buttons" id="refreshBtns">
+        <button onclick="setRefresh(1000)" id="r1000">1 秒</button>
+        <button onclick="setRefresh(3000)" id="r3000">3 秒</button>
+        <button onclick="setRefresh(5000)" id="r5000">5 秒</button>
+        <button onclick="setRefresh(10000)" id="r10000">10 秒</button>
+      </div>
+      <div class="muted">当前刷新间隔: <span id="curInterval"></span></div>
     </div>
 
-    <!-- 价格显示 -->
     <div class="row">
       <div class="box">
         <div class="label">RongChain / USDT 现价</div>
@@ -37,25 +52,40 @@
       </div>
     </div>
 
-    <!-- 交易所风格 K 线图 -->
+    <!-- 交易所风格 K 线图：RONG/USDT（DexScreener 实时价） -->
     <div class="box">
       <div class="label">RongChain 实时 K 线</div>
+      <div class="timeframe-buttons" id="rfBtns">
+        <button onclick="switchRongTF(1)" id="rbtn1">1 分钟</button>
+        <button onclick="switchRongTF(5)" id="rbtn5">5 分钟</button>
+        <button onclick="switchRongTF(15)" id="rbtn15">15 分钟</button>
+        <button onclick="switchRongTF(60)" id="rbtn60">1 小时</button>
+        <button onclick="switchRongTF(1440)" id="rbtn1440">日线</button>
+      </div>
       <div id="rongChart" class="chart"></div>
+      <div class="muted">数据源：DexScreener 现价（若无历史，前端聚合为蜡烛）。</div>
     </div>
 
+    <!-- 交易所风格 K 线图：CRC（由链上两池推导 CRC≈USDT） -->
     <div class="box">
       <div class="label">CRC 实时 K 线（推导 USDT）</div>
+      <div class="timeframe-buttons" id="cfBtns">
+        <button onclick="switchCrcTF(1)" id="cbtn1">1 分钟</button>
+        <button onclick="switchCrcTF(5)" id="cbtn5">5 分钟</button>
+        <button onclick="switchCrcTF(15)" id="cbtn15">15 分钟</button>
+        <button onclick="switchCrcTF(60)" id="cbtn60">1 小时</button>
+        <button onclick="switchCrcTF(1440)" id="cbtn1440">日线</button>
+      </div>
       <div id="crcChart" class="chart"></div>
+      <div class="muted">CRC/USDT = (RONG/USDT) ÷ (RONG/CRC)。</div>
     </div>
 
-    <!-- 管理后台入口 -->
     <div class="admin-box">
       <div class="label">管理员功能</div>
       <button onclick="goAdmin()">进入管理后台</button>
     </div>
   </div>
 
-  <!-- 底部导航栏 -->
   <div class="navbar">
     <div class="nav-item">首页</div>
     <div class="nav-item">拼团</div>
@@ -64,7 +94,6 @@
     <div class="nav-item">我的</div>
   </div>
 
-  <!-- 依赖库 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <script src="app.js"></script>
