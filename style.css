@@ -1,6 +1,7 @@
-/* v1.60 style.css */
+/* v1.61 style.css */
 
-/* 通用布局 */
+/* 继承 v1.60，增加全屏按钮样式 */
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -33,7 +34,6 @@ h1 {
   flex: 1;
 }
 
-/* 标签与说明 */
 .label {
   font-weight: bold;
   margin-bottom: 8px;
@@ -43,7 +43,6 @@ h1 {
   font-size: 14px;
 }
 
-/* 按钮 */
 button {
   padding: 6px 12px;
   margin: 2px;
@@ -60,19 +59,23 @@ button:hover {
   background: #0069d9;
 }
 
-/* 刷新间隔按钮 */
 .refresh-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
-/* Dex 图主题切换 */
 .theme-switch {
   margin: 10px 0;
 }
 
-/* 管理员区域 */
+.fullscreen-btn {
+  background: #28a745;
+}
+.fullscreen-btn:hover {
+  background: #218838;
+}
+
 .admin-box {
   background: #fff3cd;
   border: 1px solid #ffeeba;
@@ -82,7 +85,6 @@ button:hover {
   border-radius: 6px;
 }
 
-/* 底部导航栏 */
 .navbar {
   position: fixed;
   bottom: 0;
@@ -101,7 +103,6 @@ button:hover {
   color: #333;
 }
 
-/* 版本信息 */
 .ver {
   position: absolute;
   top: 5px;
