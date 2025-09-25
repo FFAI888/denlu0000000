@@ -84,8 +84,8 @@
   <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    // ✅ 已更新为你的新合约地址
-    const WHITELIST_CONTRACT = "0x7e06441c018CEF60688e52C2efAce56757491caD"; 
+    // ✅ 使用你部署的合约地址
+    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5"; 
     const whitelistAbi = [
       "function owner() view returns (address)",
       "function addWhitelist(address user) public",
@@ -97,7 +97,7 @@
 
     async function init() {
       if (!window.ethereum) {
-        alert("请先安装 MetaMask");
+        alert("请先安装 MetaMask 或 OKX 钱包");
         return;
       }
       provider = new ethers.providers.Web3Provider(window.ethereum);
