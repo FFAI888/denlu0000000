@@ -9,9 +9,8 @@ contract Whitelist {
     event Removed(address indexed user);
     event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
 
-    // ✅ 固定管理员地址（你指定的钱包）
     constructor() {
-        owner = 0x5bab614240fe64c42d476fe9daff414e8d5a735e;
+        owner = msg.sender; // 部署者初始为 owner
     }
 
     modifier onlyOwner() {
@@ -19,7 +18,6 @@ contract Whitelist {
         _;
     }
 
-    // 仍可转移所有权（可选使用）
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Invalid address");
         emit OwnershipTransferred(owner, newOwner);
