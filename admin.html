@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理后台 - RongChain DApp v1.74</title>
+  <title>管理后台 - RongChain DApp v1.75</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
@@ -10,6 +10,7 @@
     button { margin-left: 10px; padding: 6px 12px; border: none; background: #007bff; color: white; border-radius: 4px; cursor: pointer; }
     input { padding: 6px; width: 300px; margin-top: 5px; }
     #logs, #whitelist { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+    #ownerResult { margin-top: 8px; font-weight: bold; color: #007bff; }
   </style>
 </head>
 <body>
@@ -38,6 +39,12 @@
       <button onclick="transferOwnership()">转移所有权</button>
     </div>
 
+    <!-- ✅ 新增：查询 Owner 按钮 -->
+    <div style="margin-top: 15px;">
+      <button onclick="checkOwner()">查询合约 Owner</button>
+      <div id="ownerResult"></div>
+    </div>
+
     <h2>白名单列表</h2>
     <div id="whitelist">加载中...</div>
 
@@ -46,7 +53,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="auth.js"></script>
-  <script src="admin.js"></script>
+  <script src="scripts/auth.js"></script>
+  <script src="scripts/admin.js"></script>
 </body>
 </html>
