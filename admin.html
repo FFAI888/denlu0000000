@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理后台 - RongChain DApp v1.73</title>
+  <title>管理后台 - RongChain DApp v1.74</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
@@ -19,6 +19,7 @@
 
   <div id="adminPanel" class="hidden">
     <div id="ownerInfo">合约 Owner: 检测中...</div>
+    <div id="adminNotice" class="hidden">✅ 管理员已登录</div>
 
     <h2>白名单地址管理</h2>
     <div>
@@ -45,6 +46,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="auth.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
