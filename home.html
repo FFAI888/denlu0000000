@@ -5,55 +5,179 @@
   <title>RongChain DApp 首页</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .hidden { display: none; }
-    button { padding: 8px 16px; border: none; border-radius: 4px; background: #007bff; color: white; cursor: pointer; margin-top: 10px; }
-    #balances, #prices { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
-    #debug { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #eee; white-space: pre-line; }
+    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+    .content { padding-bottom: 200px; }
+    .box {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+    .label { font-weight: bold; margin-bottom: 8px; }
+    .admin-box {
+      margin: 20px 0;
+      padding: 15px;
+      border: 2px solid #007bff;
+      border-radius: 6px;
+      background: #e9f3ff;
+      display: none;
+    }
+    .admin-box button {
+      padding: 10px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    .navbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #f1f1f1;
+      border-top: 1px solid #ccc;
+    }
+    .nav-item { text-align: center; flex: 1; font-size: 14px; cursor: pointer; color: #333; }
+    .nav-item:hover { color: #007bff; }
+    iframe { width: 100%; height: 400px; border: none; margin-top: 15px; }
   </style>
 </head>
 <body>
-  <h1>RongChain 首页</h1>
+  <div class="content">
+    <h1>RongChain 首页</h1>
+    <div id="wallet">钱包地址: 检测中...</div>
 
-  <!-- 显示钱包地址 -->
-  <div id="walletAddress">钱包地址: 检测中...</div>
-  <div id="ownerAddress">合约 Owner: 检测中...</div>
-  <div id="adminWallet" class="hidden">管理员钱包地址: </div>
-  <div id="adminNotice" class="hidden">✅ 管理员已登录</div>
+    <div class="box">
+      <div class="label">地址检测状态</div>
+      <div id="addressStatus">正在检测中...</div>
+    </div>
 
-  <!-- 余额显示 -->
-  <div id="balances">
-    <h2>余额</h2>
-    <div id="rongBalance">RongChain 余额: 检测中...</div>
-    <div id="crcBalance">CRC 余额: 检测中...</div>
+    <div class="box">
+      <div class="label">RongChain 余额</div>
+      <div id="balance">检测中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">CRC 余额</div>
+      <div id="crcBalance">检测中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">RongChain/USDT 价格</div>
+      <div id="price">加载中...</div>
+    </div>
+
+    <div class="box">
+      <div class="label">RongChain/CRC 价格</div>
+      <div id="crcPrice">加载中...</div>
+    </div>
+
+    <div class="admin-box" id="adminBox">
+      <div class="label">管理员功能</div>
+      <button onclick="goAdmin()">进入管理后台</button>
+    </div>
+
+    <h2>K 线行情 (RongChain/USDT)</h2>
+    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:ETHUSDT&interval=15&hidesidetoolbar=1&theme=light&style=1&timezone=Asia%2FShanghai"
+            allowtransparency="true" scrolling="no"></iframe>
   </div>
 
-  <!-- 价格显示 -->
-  <div id="prices">
-    <h2>价格</h2>
-    <div id="price">RongChain/USDT 价格: 检测中...</div>
-    <div id="crcPrice">RongChain/CRC 价格: 检测中...</div>
+  <div class="navbar">
+    <div class="nav-item">首页</div>
+    <div class="nav-item">拼团</div>
+    <div class="nav-item">赚币</div>
+    <div class="nav-item">兑换</div>
+    <div class="nav-item">我的</div>
   </div>
 
-  <!-- 进入管理后台 -->
-  <div style="margin-top: 20px;">
-    <button id="adminBtn" class="hidden" onclick="goAdmin()">进入管理后台</button>
-  </div>
-
-  <!-- 合约检测工具（仅管理员可见） -->
-  <h2 id="debugTitle" class="hidden">合约检测工具</h2>
-  <div id="contractCheck" class="hidden">
-    <input type="text" id="contractAddr" placeholder="输入合约地址">
-    <button id="checkBtn">检测</button>
-    <div id="checkResult" style="margin-top: 10px;"></div>
-  </div>
-
-  <!-- 调试信息（仅管理员可见） -->
-  <div id="debug" class="hidden">调试区</div>
-
-  <!-- 脚本引入 -->
+  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="scripts/auth.js"></script>
-  <script src="scripts/home.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const account = params.get("account");
+    if (account) document.getElementById("wallet").innerText = "钱包地址: " + account;
+
+    const RONGCHAIN_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
+    const CRC_TOKEN       = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
+    const RONGCHAIN_USDT_PAIR = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
+    const RONGCHAIN_CRC_PAIR  = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
+    const WHITELIST_CONTRACT  = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722";
+
+    const erc20Abi = [
+      "function decimals() view returns (uint8)",
+      "function symbol() view returns (string)",
+      "function balanceOf(address) view returns (uint256)"
+    ];
+    const whitelistAbi = ["function owner() view returns (address)"];
+
+    function checkAddress() {
+      if (account && ethers.utils.isAddress(account)) {
+        document.getElementById("addressStatus").innerText = "✅ 地址有效";
+      } else {
+        document.getElementById("addressStatus").innerText = "❌ 地址无效";
+      }
+    }
+
+    async function checkAdmin() {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
+        const owner = await contract.owner();
+        if (owner.toLowerCase() === account.toLowerCase()) {
+          document.getElementById("adminBox").style.display = "block";
+        }
+      } catch (e) { console.error("管理员检测失败:", e.message); }
+    }
+
+    function goAdmin() { window.location.href = "admin.html?account=" + account; }
+
+    async function fetchBalance(tokenAddr, elId) {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(tokenAddr, erc20Abi, provider);
+        const decimals = await contract.decimals();
+        const symbol = await contract.symbol();
+        const balance = await contract.balanceOf(account);
+        const formatted = ethers.utils.formatUnits(balance, decimals);
+        document.getElementById(elId).innerText = formatted + " " + symbol;
+      } catch (e) {
+        document.getElementById(elId).innerText = "❌ 余额获取失败: " + e.message;
+      }
+    }
+
+    async function fetchPrice(pairAddr, elId, label) {
+      try {
+        const res = await fetch("https://api.dexscreener.com/latest/dex/pairs/bsc/" + pairAddr);
+        const data = await res.json();
+        if (data && data.pairs && data.pairs.length > 0) {
+          const priceUsd = data.pairs[0].priceUsd;
+          document.getElementById(elId).innerText = label + ": " + priceUsd + " USD";
+        } else {
+          document.getElementById(elId).innerText = "⚠️ 未找到 " + label;
+        }
+      } catch (e) {
+        document.getElementById(elId).innerText = "❌ 获取失败: " + e.message;
+      }
+    }
+
+    function refresh() {
+      checkAddress();
+      checkAdmin();
+      fetchBalance(RONGCHAIN_TOKEN, "balance");
+      fetchBalance(CRC_TOKEN, "crcBalance");
+      fetchPrice(RONGCHAIN_USDT_PAIR, "price", "RongChain/USDT");
+      fetchPrice(RONGCHAIN_CRC_PAIR, "crcPrice", "RongChain/CRC");
+    }
+
+    refresh();
+    setInterval(refresh, 1000);
+  </script>
 </body>
 </html>
