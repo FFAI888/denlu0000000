@@ -1,54 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ * @title Whitelist 合约
+ * @dev 提供白名单管理功能，支持添加/删除白名单，查询用户是否在白名单，支持所有权转移。
+ */
 contract Whitelist {
-    address public owner;
-    mapping(address => bool) private whitelist;
-    address[] private whitelistArray; // ✅ 保存所有曾经加入过的地址
+    address private _owner;
+    mapping(address => bool) private _whitelist;
 
-    event Added(address indexed user);
-    event Removed(address indexed user);
-    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event AddedToWhitelist(address indexed account);
+    event RemovedFromWhitelist(address indexed account);
 
     constructor() {
-        owner = msg.sender; // 部署者初始为 owner
+        _owner = msg.sender;
+        emit OwnershipTransferred(address(0), _owner);
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
+        require(owner() == msg.sender, "Not owner");
         _;
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Invalid address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+    function owner() public view returns (address) {
+        return _owner;
     }
 
-    function addWhitelist(address user) external onlyOwner {
-        require(!whitelist[user], "Already whitelisted");
-        whitelist[user] = true;
-        whitelistArray.push(user); // ✅ 保存进数组
-        emit Added(user);
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0), "New owner is zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
     }
 
-    function removeWhitelist(address user) external onlyOwner {
-        require(whitelist[user], "Not whitelisted");
-        whitelist[user] = false;
-        emit Removed(user);
+    function addWhitelist(address account) public onlyOwner {
+        require(!_whitelist[account], "Already whitelisted");
+        _whitelist[account] = true;
+        emit AddedToWhitelist(account);
     }
 
-    function isWhitelisted(address user) external view returns (bool) {
-        return whitelist[user];
+    function removeWhitelist(address account) public onlyOwner {
+        require(_whitelist[account], "Not in whitelist");
+        _whitelist[account] = false;
+        emit RemovedFromWhitelist(account);
     }
 
-    // ✅ 新增：返回所有曾经添加过的地址 + 当前状态
-    function getAllWhitelist() external view returns (address[] memory, bool[] memory) {
-        uint256 len = whitelistArray.length;
-        bool[] memory statuses = new bool[](len);
-        for (uint256 i = 0; i < len; i++) {
-            statuses[i] = whitelist[whitelistArray[i]];
-        }
-        return (whitelistArray, statuses);
+    function isWhitelisted(address account) public view returns (bool) {
+        return _whitelist[account];
     }
 }
