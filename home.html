@@ -2,14 +2,14 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 首页（v1.41）</title>
+  <title>RongChain 首页（v1.45）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 18px; margin: 0; background: #f5f5f5; }
     .ver { position: fixed; right: 12px; top: 10px; color:#999; font-size:12px;}
     .topver { font-size:12px; color:#666; margin-bottom:8px;}
     h1 { margin: 8px 0 16px; }
-    .content { padding-bottom: 120px; }
+    .content { padding-bottom: 140px; }
     .box { margin: 14px 0; padding: 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
     .label { font-weight: bold; margin-bottom: 6px; }
     .admin-box { margin: 14px 0; padding: 14px; border: 2px solid #007bff; border-radius: 8px; background: #e9f3ff; display: none; }
@@ -17,16 +17,20 @@
     .navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; display: flex; justify-content: space-around; align-items: center; background: #f1f1f1; border-top: 1px solid #ccc; }
     .nav-item { text-align: center; flex: 1; font-size: 14px; cursor: pointer; color: #333; }
     .nav-item:hover { color: #007bff; }
-    iframe { width: 100%; height: 420px; border: none; margin-top: 8px; border-radius:8px; }
     .muted { color:#777; font-size: 12px; }
     .timeframe-buttons button { margin: 4px 6px 0 0; padding: 5px 10px; font-size: 12px; cursor: pointer; }
     .timeframe-buttons button.active { background: #007bff; color:#fff; border:none; border-radius:4px; }
-    #chart { width: 100%; height: 400px; }
+    .chart { width: 100%; height: 400px; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 920px) {
+      .row { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="ver">v1.41</div>
-  <div class="topver">最高版本：v1.41</div>
+  <div class="ver">v1.45</div>
+  <div class="topver">最高版本：v1.45</div>
+
   <div class="content">
     <h1>RongChain 首页</h1>
     <div id="wallet" class="muted">钱包地址: 检测中...</div>
@@ -36,39 +40,57 @@
       <div id="addressStatus" class="muted">正在检测中...</div>
     </div>
 
-    <div class="box">
-      <div class="label">RongChain 余额</div>
-      <div id="balance" class="muted">检测中...</div>
+    <div class="row">
+      <div class="box">
+        <div class="label">RongChain 余额</div>
+        <div id="balance" class="muted">检测中...</div>
+      </div>
+      <div class="box">
+        <div class="label">CRC 余额</div>
+        <div id="crcBalance" class="muted">检测中...</div>
+      </div>
     </div>
 
-    <div class="box">
-      <div class="label">CRC 余额</div>
-      <div id="crcBalance" class="muted">检测中...</div>
+    <div class="row">
+      <div class="box">
+        <div class="label">RongChain/USDT 价格</div>
+        <div id="price" class="muted">加载中...</div>
+      </div>
+      <div class="box">
+        <div class="label">RongChain/CRC 价格（含推导 USDT）</div>
+        <div id="crcPrice" class="muted">加载中...</div>
+      </div>
     </div>
 
-    <div class="box">
-      <div class="label">RongChain/USDT 价格</div>
-      <div id="price" class="muted">加载中...</div>
-    </div>
-
-    <div class="box">
-      <div class="label">RongChain/CRC 价格（含推导 USDT）</div>
-      <div id="crcPrice" class="muted">加载中...</div>
-    </div>
-
-    <!-- 📊 实时 K 线图 -->
+    <!-- 📊 左：Rong 实时 K 线（链上采样聚合，已实现） -->
     <div class="box">
       <div class="label">RongChain 实时 K 线</div>
-      <div class="timeframe-buttons">
-        <button onclick="switchTimeframe(1)" id="btn1">1 分钟</button>
-        <button onclick="switchTimeframe(5)" id="btn5">5 分钟</button>
-        <button onclick="switchTimeframe(15)" id="btn15">15 分钟</button>
-        <button onclick="switchTimeframe(60)" id="btn60">1 小时</button>
-        <button onclick="switchTimeframe(1440)" id="btn1440">日线</button>
-        <button onclick="switchTimeframe(10080)" id="btn10080">周线</button>
-        <button onclick="switchTimeframe(43200)" id="btn43200">月线</button>
+      <div class="timeframe-buttons" id="rfBtns">
+        <button onclick="switchRongTF(1)" id="rbtn1">1 分钟</button>
+        <button onclick="switchRongTF(5)" id="rbtn5">5 分钟</button>
+        <button onclick="switchRongTF(15)" id="rbtn15">15 分钟</button>
+        <button onclick="switchRongTF(60)" id="rbtn60">1 小时</button>
+        <button onclick="switchRongTF(1440)" id="rbtn1440">日线</button>
+        <button onclick="switchRongTF(10080)" id="rbtn10080">周线</button>
+        <button onclick="switchRongTF(43200)" id="rbtn43200">月线</button>
       </div>
-      <div id="chart"></div>
+      <div id="rongChart" class="chart"></div>
+      <div class="muted">数据源：RONG/USDT 池子链上价格快照（前端聚合）。</div>
+    </div>
+
+    <!-- 📊 右：CRC 实时 K 线（GeckoTerminal 优先，失败则用链上推导聚合） -->
+    <div class="box">
+      <div class="label">CRC 实时 K 线（优先 GeckoTerminal，失败则链上推导）</div>
+      <div class="timeframe-buttons" id="cfBtns">
+        <button onclick="loadCrcCandles('1m')" id="cbtn1m">1 分钟</button>
+        <button onclick="loadCrcCandles('5m')" id="cbtn5m">5 分钟</button>
+        <button onclick="loadCrcCandles('15m')" id="cbtn15m">15 分钟</button>
+        <button onclick="loadCrcCandles('1h')" id="cbtn1h">1 小时</button>
+        <button onclick="loadCrcCandles('1d')" id="cbtn1d">日线</button>
+        <button onclick="loadCrcCandles('1w')" id="cbtn1w">周线</button>
+      </div>
+      <div id="crcChart" class="chart"></div>
+      <div id="crcSource" class="muted">数据源：尝试 GeckoTerminal...</div>
     </div>
 
     <div class="admin-box" id="adminBox">
@@ -85,15 +107,22 @@
     <div class="nav-item">我的</div>
   </div>
 
+  <!-- libs -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
   <script>
-    // ===== 配置 =====
+    // ===== 基础配置 =====
     const ACCOUNT_PARAM = new URLSearchParams(window.location.search).get("account");
-    const RONGCHAIN_TOKEN      = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
-    const CRC_TOKEN            = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
-    const USDT                 = "0x55d398326f99059ff775485246999027b3197955";
-    const RONGCHAIN_USDT_PAIR  = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
+    const RONGCHAIN_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
+    const CRC_TOKEN       = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
+    const USDT            = "0x55d398326f99059ff775485246999027b3197955";
+    const RONG_USDT_PAIR  = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
+    const RONG_CRC_PAIR   = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
+    // GeckoTerminal：BSC 网络 + 你的 CRC 池（注意：有些池子可能暂未被收录）
+    // 规范路径通常为 /api/v2/networks/{network}/pools/{pool}/candles?interval=1m
+    const GECKO_NETWORK = "bsc";
+    const GECKO_POOL    = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
 
     const erc20Abi = [
       "function decimals() view returns (uint8)",
@@ -116,10 +145,7 @@
         document.getElementById("addressStatus").innerText = "❌ 地址无效或未登录";
       }
     }
-
-    function goAdmin() {
-      window.location.href = "admin.html?account=" + account;
-    }
+    function goAdmin(){ window.location.href = "admin.html?account=" + account; }
 
     // ===== 余额 =====
     async function fetchBalance(tokenAddr, elId) {
@@ -127,11 +153,7 @@
         if (!window.ethereum || !account) throw new Error("未检测到钱包或未登录");
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contract = new ethers.Contract(tokenAddr, erc20Abi, provider);
-        const [dec, sym, bal] = await Promise.all([
-          contract.decimals(),
-          contract.symbol(),
-          contract.balanceOf(account)
-        ]);
+        const [dec, sym, bal] = await Promise.all([contract.decimals(), contract.symbol(), contract.balanceOf(account)]);
         const formatted = ethers.utils.formatUnits(bal, dec);
         document.getElementById(elId).innerText = formatted + " " + sym;
       } catch (e) {
@@ -139,96 +161,192 @@
       }
     }
 
-    // ===== 价格 =====
-    async function fetchPriceFromOnchain(pairAddr, baseTokenAddr, quoteTokenAddr) {
+    // ===== 链上价格（用储备计算） =====
+    async function priceFromPair(pairAddr, base, quote) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const pair = new ethers.Contract(pairAddr, pairAbi, provider);
-      const [t0, t1, reserves] = await Promise.all([pair.token0(), pair.token1(), pair.getReserves()]);
+      const [t0, t1, res] = await Promise.all([pair.token0(), pair.token1(), pair.getReserves()]);
       const token0 = t0.toLowerCase(), token1 = t1.toLowerCase();
-      const r0 = ethers.BigNumber.from(reserves.reserve0.toString());
-      const r1 = ethers.BigNumber.from(reserves.reserve1.toString());
+      const r0 = ethers.BigNumber.from(res.reserve0.toString());
+      const r1 = ethers.BigNumber.from(res.reserve1.toString());
       const t0c = new ethers.Contract(token0, erc20Abi, provider);
       const t1c = new ethers.Contract(token1, erc20Abi, provider);
       const [d0, d1] = await Promise.all([t0c.decimals(), t1c.decimals()]);
-      const base = baseTokenAddr.toLowerCase();
-      const quote = quoteTokenAddr.toLowerCase();
-      if (token0 === base && token1 === quote) {
+      const [b, q] = [base.toLowerCase(), quote.toLowerCase()];
+
+      if (token0 === b && token1 === q) {
         return Number(ethers.utils.formatUnits(r1, d1)) / Number(ethers.utils.formatUnits(r0, d0));
-      } else if (token1 === base && token0 === quote) {
+      } else if (token1 === b && token0 === q) {
         return Number(ethers.utils.formatUnits(r0, d0)) / Number(ethers.utils.formatUnits(r1, d1));
-      } else {
-        throw new Error("配对不包含指定 base/quote");
       }
+      throw new Error("配对不包含指定 base/quote");
     }
 
-    // ===== 实时 K 线逻辑 =====
-    let chart = null;
-    let candleSeries = null;
-    let candles = [];
-    let currentBucket = null;
-    let timeframe = 1440; // 默认日线
-
-    function initChart() {
-      if (chart) chart.remove();
-      chart = LightweightCharts.createChart(document.getElementById('chart'), { width: document.getElementById('chart').clientWidth, height: 400 });
-      candleSeries = chart.addCandlestickSeries();
-    }
-
-    function resizeChart() {
-      if (chart) {
-        chart.applyOptions({ width: document.getElementById('chart').clientWidth });
-      }
-    }
-    window.addEventListener('resize', resizeChart);
-
-    function switchTimeframe(min) {
-      timeframe = min;
-      localStorage.setItem("rongchain_timeframe", min); // 记住用户选择
-      candles = [];
-      currentBucket = null;
-      candleSeries.setData([]);
-      document.querySelectorAll('.timeframe-buttons button').forEach(b => b.classList.remove("active"));
-      document.getElementById("btn"+min).classList.add("active");
-    }
-
-    async function updateCandle() {
+    // ===== 页面价格区：RONG/USDT & RONG/CRC（含推导 USDT） =====
+    let rongUsdt = null, rongCrc = null;
+    async function updateSpotPrices(){
       try {
-        const price = await fetchPriceFromOnchain(RONGCHAIN_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
-        const now = new Date();
-        const bucket = Math.floor(now.getTime() / (timeframe * 60000));
-        if (currentBucket !== bucket) {
-          currentBucket = bucket;
-          candles.push({ time: Math.floor(now.getTime() / 1000), open: price, high: price, low: price, close: price });
+        rongUsdt = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
+        document.getElementById("price").innerText = `≈ ${rongUsdt.toFixed(6)} USDT`;
+      } catch { document.getElementById("price").innerText = "❌ 获取失败"; }
+
+      try {
+        rongCrc = await priceFromPair(RONG_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
+        if (rongUsdt) {
+          const crcUsdt = rongUsdt / rongCrc; // 1 CRC 的 USDT 价
+          document.getElementById("crcPrice").innerText = `≈ ${rongCrc.toFixed(6)} CRC（推导≈ ${crcUsdt.toFixed(6)} USDT/CRC）`;
         } else {
-          const c = candles[candles.length - 1];
-          c.high = Math.max(c.high, price);
-          c.low = Math.min(c.low, price);
-          c.close = price;
+          document.getElementById("crcPrice").innerText = `≈ ${rongCrc.toFixed(6)} CRC`;
         }
-        candleSeries.setData(candles);
-      } catch (e) { console.log("价格获取失败", e); }
+      } catch { document.getElementById("crcPrice").innerText = "❌ 获取失败"; }
     }
 
-    // ===== 定时任务 =====
-    function refreshAll() {
+    // ===== Rong 图表（链上采样聚合） =====
+    let rChart=null, rSeries=null, rCandles=[], rBucket=null, rTF=Number(localStorage.getItem("rong_tf")||1440);
+    function initRongChart(){
+      if (rChart) rChart.remove();
+      rChart = LightweightCharts.createChart(document.getElementById('rongChart'), { width: document.getElementById('rongChart').clientWidth, height: 400 });
+      rSeries = rChart.addCandlestickSeries();
+      window.addEventListener('resize', ()=> rChart.applyOptions({ width: document.getElementById('rongChart').clientWidth }));
+      markActiveButtons('rfBtns', `rbtn${rTF}`);
+    }
+    function switchRongTF(min){
+      rTF=min; localStorage.setItem("rong_tf", String(min));
+      rCandles=[]; rBucket=null; rSeries.setData([]);
+      markActiveButtons('rfBtns', `rbtn${min}`);
+    }
+    async function updateRongCandle(){
+      try{
+        const p = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
+        const now=Date.now(), bucket=Math.floor(now/(rTF*60000));
+        if (rBucket!==bucket){ rBucket=bucket; rCandles.push({time:Math.floor(now/1000), open:p, high:p, low:p, close:p}); }
+        else{ const c=rCandles[rCandles.length-1]; c.high=Math.max(c.high,p); c.low=Math.min(c.low,p); c.close=p; }
+        rSeries.setData(rCandles);
+      }catch(e){ console.log("RONG K线失败", e); }
+    }
+
+    // ===== CRC 图表（Gecko 优先；失败则链上推导聚合） =====
+    let cChart=null, cSeries=null, cCandles=[], cBucket=null, cTFKey="crc_tf", cTF="1d", cMode="gecko";
+    const validIntervals = ["1m","5m","15m","1h","1d","1w"];
+
+    function initCrcChart(){
+      if (cChart) cChart.remove();
+      cChart = LightweightCharts.createChart(document.getElementById('crcChart'), { width: document.getElementById('crcChart').clientWidth, height: 400 });
+      cSeries = cChart.addCandlestickSeries();
+      window.addEventListener('resize', ()=> cChart.applyOptions({ width: document.getElementById('crcChart').clientWidth }));
+      // 恢复上次选择
+      const saved = localStorage.getItem(cTFKey);
+      if (saved && validIntervals.includes(saved)) { cTF=saved; }
+      markActiveButtons('cfBtns', `cbtn${cTF}`);
+      // 初次加载
+      loadCrcCandles(cTF);
+    }
+
+    function markActiveButtons(groupId, activeId){
+      document.querySelectorAll(`#${groupId} button`).forEach(b=>b.classList.remove("active"));
+      const el = document.getElementById(activeId);
+      if (el) el.classList.add("active");
+    }
+
+    async function geckoFetchCandles(interval){
+      // GeckoTerminal API（若该池已收录）
+      const url = `https://api.geckoterminal.com/api/v2/networks/${GECKO_NETWORK}/pools/${GECKO_POOL}/candles?interval=${interval}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Gecko API 响应失败");
+      const json = await res.json();
+      // 兼容不同结构：data 或 attributes
+      const rows = (json.data || []).map(x => {
+        const a = x.attributes || {};
+        return {
+          time: Math.floor(new Date(a.timestamp).getTime()/1000),
+          open: Number(a.open), high: Number(a.high), low: Number(a.low), close: Number(a.close)
+        }
+      }).filter(d => Number.isFinite(d.open));
+      if (!rows.length) throw new Error("Gecko 返回空数据");
+      return rows;
+    }
+
+    async function loadCrcCandles(interval){
+      cTF = interval; localStorage.setItem(cTFKey, interval);
+      markActiveButtons('cfBtns', `cbtn${interval}`);
+      document.getElementById("crcSource").innerText = "数据源：尝试 GeckoTerminal...";
+      try{
+        const rows = await geckoFetchCandles(interval);
+        cSeries.setData(rows);
+        cMode = "gecko";
+        document.getElementById("crcSource").innerText = "数据源：GeckoTerminal（Pancake 池子蜡烛）";
+      }catch(e){
+        // 回退到前端推导
+        console.log("Gecko 失败，回退到前端推导", e);
+        cMode = "local";
+        cCandles=[]; cBucket=null; cSeries.setData([]);
+        document.getElementById("crcSource").innerText = "数据源：链上推导（RONG/USDT 与 RONG/CRC 价格聚合）";
+      }
+    }
+
+    // 前端推导 CRC/USDT：每次采样 p_crc_usdt = (RONG/USDT) / (RONG/CRC)
+    function intervalToMinutes(interval){
+      if (interval.endsWith("m")) return parseInt(interval);
+      if (interval.endsWith("h")) return parseInt(interval)*60;
+      if (interval==="1d") return 1440;
+      if (interval==="1w") return 10080;
+      return 1440;
+    }
+    async function updateCrcLocalCandle(){
+      if (cMode!=="local") return;
+      try{
+        const pRongUsdt = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
+        const pRongCrc  = await priceFromPair(RONG_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
+        if (!pRongUsdt || !pRongCrc) return;
+        const pCrcUsdt = pRongUsdt / pRongCrc;
+
+        const tfMin = intervalToMinutes(cTF);
+        const now = Date.now();
+        const bucket = Math.floor(now/(tfMin*60000));
+        if (cBucket!==bucket){
+          cBucket=bucket;
+          cCandles.push({time: Math.floor(now/1000), open:pCrcUsdt, high:pCrcUsdt, low:pCrcUsdt, close:pCrcUsdt});
+        }else{
+          const c=cCandles[cCandles.length-1];
+          c.high=Math.max(c.high,pCrcUsdt);
+          c.low =Math.min(c.low ,pCrcUsdt);
+          c.close=pCrcUsdt;
+        }
+        cSeries.setData(cCandles);
+      }catch(e){ console.log("CRC 本地推导更新失败", e); }
+    }
+
+    // ===== 普通信息刷新 =====
+    function refreshAll(){
       checkAddressValid();
       fetchBalance(RONGCHAIN_TOKEN, "balance");
       fetchBalance(CRC_TOKEN, "crcBalance");
+      updateSpotPrices();
     }
 
-    initChart();
-
-    // 从 localStorage 恢复用户上次选择的周期
-    const saved = localStorage.getItem("rongchain_timeframe");
-    if (saved) {
-      switchTimeframe(Number(saved));
-    } else {
-      switchTimeframe(1440); // 默认日线
-    }
-
+    // ===== 启动 =====
+    // 地址状态 & 余额 & 现价
     refreshAll();
     setInterval(refreshAll, 1000);
-    setInterval(updateCandle, 10000);
+
+    // RONG 图表
+    initRongChart();
+    switchRongTF(rTF);              // 按上次记忆或默认
+    setInterval(updateRongCandle, 10000);
+
+    // CRC 图表
+    initCrcChart();
+    // 周期变化时，若在 local 模式，则重置本地聚合容器
+    //（已在 loadCrcCandles 中处理）
+
+    // 定时尝试：若 CRC 图表处于 local 回退模式，就用前端推导驱动
+    setInterval(updateCrcLocalCandle, 10000);
+
+    // 自适应宽度
+    window.addEventListener('resize', ()=>{
+      if (rChart) rChart.applyOptions({ width: document.getElementById('rongChart').clientWidth });
+      if (cChart) cChart.applyOptions({ width: document.getElementById('crcChart').clientWidth });
+    });
   </script>
 </body>
 </html>
