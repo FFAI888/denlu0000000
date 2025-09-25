@@ -22,11 +22,6 @@
     const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
     const whitelistAbi = [ "function isWhitelisted(address user) view returns (bool)" ];
 
-    function getBasePath() {
-      const path = window.location.pathname;
-      return path.includes("/frontend/") ? "/frontend/" : "/";
-    }
-
     document.getElementById("connectBtn").onclick = async () => {
       if (!window.ethereum) {
         alert("❌ 请先安装 MetaMask 或 OKX 钱包");
@@ -42,9 +37,8 @@
         const allowed = await contract.isWhitelisted(account);
 
         if (allowed) {
-          const base = getBasePath();
           document.getElementById("status").innerText = "✅ 白名单验证通过，正在进入首页...";
-          setTimeout(() => { window.location.href = base + "home.html?account=" + account; }, 800);
+          setTimeout(() => { window.location.href = "home.html?account=" + account; }, 800);
         } else {
           document.getElementById("status").innerText = "❌ 该地址不在白名单，禁止访问首页";
         }
