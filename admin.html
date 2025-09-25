@@ -2,98 +2,113 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理后台（v1.55）</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - v1.70</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 </head>
 <body>
-  <div class="ver">v1.55</div>
+  <div class="topver">管理后台 - v1.70</div>
   <div class="content">
-    <h1>管理后台</h1>
-    <div id="wallet" class="muted">钱包地址: 检测中...</div>
-    <div id="owner" class="muted">合约 Owner: 检测中...</div>
-    <div id="adminStatus" class="muted">权限检测中...</div>
+    <h2>Whitelist 管理</h2>
+    <p id="adminStatus">检测中...</p>
 
-    <div class="box">
-      <div class="label">白名单管理</div>
-      <input type="text" id="wlAddr" placeholder="输入钱包地址" style="width:100%;padding:6px;margin-bottom:8px;">
-      <button onclick="addWL()">添加白名单</button>
-      <button onclick="removeWL()">移除白名单</button>
-    </div>
+    <div id="adminPanel" style="display:none;">
+      <div class="box">
+        <div class="label">添加 / 移除白名单</div>
+        <input type="text" id="wlAddr" placeholder="输入地址">
+        <button onclick="setWhitelist(true)">添加</button>
+        <button onclick="setWhitelist(false)">移除</button>
+      </div>
 
-    <div class="box">
-      <div class="label">转移 Owner</div>
-      <input type="text" id="newOwner" placeholder="新 Owner 地址" style="width:100%;padding:6px;margin-bottom:8px;">
-      <button onclick="transferOwner()">转移</button>
-    </div>
+      <div class="box">
+        <div class="label">转移所有权</div>
+        <input type="text" id="newOwner" placeholder="新管理员地址">
+        <button onclick="transferOwner()">转移</button>
+      </div>
 
-    <div class="box">
-      <button onclick="goHome()">返回首页</button>
+      <div class="box">
+        <div class="label">当前白名单</div>
+        <ul id="wlList"></ul>
+        <button onclick="loadWhitelist()">刷新</button>
+      </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <div class="ver">v1.70</div>
+
   <script>
-    const whitelistAbi = [
-      "function owner() view returns (address)",
-      "function isWhitelisted(address) view returns (bool)",
-      "function addWhitelist(address) external",
-      "function removeWhitelist(address) external",
-      "function transferOwnership(address) external"
+    const WHITELIST_ADDR = "0x7e06441c018CEF60688e52C2efAce56757491caD";
+    const ABI = [
+      "function owner() view returns(address)",
+      "function transferOwnership(address) external",
+      "function setWhitelisted(address,bool) external",
+      "function isWhitelisted(address) view returns(bool)",
+      "function getWhitelist() view returns(address[])"
     ];
-
-    const whitelistAddr = "在这里填你部署的 Whitelist 合约地址"; 
-
-    let provider, signer, contract, account;
+    let signer, contract;
 
     async function init(){
-      if(!window.ethereum){ alert("请在钱包内打开"); return; }
-      provider = new ethers.providers.Web3Provider(window.ethereum);
+      if(!window.ethereum){
+        document.getElementById("adminStatus").innerText = "❌ 没有检测到钱包";
+        return;
+      }
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       signer = provider.getSigner();
-      account = await signer.getAddress();
-      document.getElementById("wallet").innerText = "钱包地址: " + account;
+      const addr = await signer.getAddress();
 
-      contract = new ethers.Contract(whitelistAddr, whitelistAbi, signer);
-
+      contract = new ethers.Contract(WHITELIST_ADDR, ABI, signer);
       try{
         const owner = await contract.owner();
-        document.getElementById("owner").innerText = "合约 Owner: " + owner;
-        if(owner.toLowerCase() === account.toLowerCase()){
-          document.getElementById("adminStatus").innerText = "✅ 你是合约 Owner";
+        if(addr.toLowerCase() === owner.toLowerCase()){
+          document.getElementById("adminStatus").innerText = "✅ 管理员: " + addr;
+          document.getElementById("adminPanel").style.display = "block";
+          loadWhitelist();
         }else{
-          const isWL = await contract.isWhitelisted(account);
-          document.getElementById("adminStatus").innerText = isWL ? "✅ 你在白名单中" : "❌ 无权限";
+          document.getElementById("adminStatus").innerText = "❌ 非管理员: " + addr;
         }
       }catch(e){
-        document.getElementById("adminStatus").innerText = "❌ 检查失败: " + (e.message||e);
+        document.getElementById("adminStatus").innerText = "❌ 合约调用失败";
       }
     }
 
-    async function addWL(){
-      const addr = document.getElementById("wlAddr").value.trim();
-      if(!addr) return alert("请输入地址");
-      try{ await contract.addWhitelist(addr); alert("已提交交易"); }
-      catch(e){ alert("失败: "+(e.message||e)); }
-    }
-
-    async function removeWL(){
-      const addr = document.getElementById("wlAddr").value.trim();
-      if(!addr) return alert("请输入地址");
-      try{ await contract.removeWhitelist(addr); alert("已提交交易"); }
-      catch(e){ alert("失败: "+(e.message||e)); }
+    async function setWhitelist(status){
+      const addr = document.getElementById("wlAddr").value;
+      if(!ethers.utils.isAddress(addr)) return alert("地址无效");
+      try{
+        const tx = await contract.setWhitelisted(addr, status);
+        await tx.wait();
+        alert("操作成功");
+        loadWhitelist();
+      }catch(e){ alert("操作失败: " + e.message); }
     }
 
     async function transferOwner(){
-      const addr = document.getElementById("newOwner").value.trim();
-      if(!addr) return alert("请输入新 Owner 地址");
-      try{ await contract.transferOwnership(addr); alert("已提交交易"); }
-      catch(e){ alert("失败: "+(e.message||e)); }
+      const addr = document.getElementById("newOwner").value;
+      if(!ethers.utils.isAddress(addr)) return alert("地址无效");
+      try{
+        const tx = await contract.transferOwnership(addr);
+        await tx.wait();
+        alert("所有权已转移");
+      }catch(e){ alert("操作失败: " + e.message); }
     }
 
-    function goHome(){ window.location.href="home.html"; }
+    async function loadWhitelist(){
+      try{
+        const list = await contract.getWhitelist();
+        const ul = document.getElementById("wlList");
+        ul.innerHTML = "";
+        list.forEach(a=>{
+          const li = document.createElement("li");
+          li.innerText = a;
+          ul.appendChild(li);
+        });
+      }catch(e){
+        alert("加载白名单失败");
+      }
+    }
 
-    init();
+    window.onload = init;
   </script>
 </body>
 </html>
