@@ -1,95 +1,86 @@
-/* v1.62 style.css */
-/* 基于 v1.61，新增退出全屏按钮样式 */
-
+/* 全局样式 */
 body {
   font-family: Arial, sans-serif;
+  background: #f4f6f9;
   margin: 0;
   padding: 0;
-  background: #f5f5f5;
+  text-align: center;
 }
 
-h1 {
-  text-align: center;
-  margin: 20px 0;
+.ver {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 12px;
+  color: #999;
+}
+
+.topver {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 12px;
+  color: #666;
 }
 
 .content {
-  padding: 15px;
+  padding: 20px;
+}
+
+button {
+  padding: 10px 16px;
+  margin: 5px;
+  border: none;
+  border-radius: 4px;
+  background: #3b82f6;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2563eb;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+input {
+  padding: 8px;
+  margin: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 80%;
 }
 
 .box {
   background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   padding: 15px;
   margin: 10px 0;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-align: left;
 }
 
 .row {
   display: flex;
   gap: 10px;
+  justify-content: space-between;
 }
+
 .row .box {
   flex: 1;
 }
 
 .label {
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
+
 .muted {
   color: #666;
   font-size: 14px;
-}
-
-button {
-  padding: 6px 12px;
-  margin: 2px;
-  border: none;
-  border-radius: 4px;
-  background: #007bff;
-  color: #fff;
-  cursor: pointer;
-}
-button.active {
-  background: #0056b3;
-}
-button:hover {
-  background: #0069d9;
-}
-
-.refresh-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.theme-switch {
-  margin: 10px 0;
-}
-
-.fullscreen-btn {
-  background: #28a745;
-}
-.fullscreen-btn:hover {
-  background: #218838;
-}
-
-.exit-fullscreen-btn {
-  background: #dc3545;
-  display: none; /* 初始隐藏，进入全屏时显示 */
-}
-.exit-fullscreen-btn:hover {
-  background: #c82333;
-}
-
-.admin-box {
-  background: #fff3cd;
-  border: 1px solid #ffeeba;
-  color: #856404;
-  padding: 15px;
-  margin-top: 20px;
-  border-radius: 6px;
 }
 
 .navbar {
@@ -97,12 +88,14 @@ button:hover {
   bottom: 0;
   left: 0;
   right: 0;
+  height: 50px;
   background: #fff;
   border-top: 1px solid #ddd;
   display: flex;
   justify-content: space-around;
-  padding: 10px 0;
+  align-items: center;
 }
+
 .nav-item {
   flex: 1;
   text-align: center;
@@ -110,16 +103,45 @@ button:hover {
   color: #333;
 }
 
-.ver {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 12px;
-  color: #aaa;
+/* 全屏效果 */
+.fullscreen {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 9999;
+  background: #000;
 }
-.topver {
-  text-align: center;
-  font-size: 12px;
-  color: #aaa;
-  margin-top: 2px;
+
+.fullscreen iframe {
+  height: 100% !important;
+}
+
+.fullscreen-btn,
+.exit-fullscreen-btn {
+  padding: 8px 12px;
+  margin: 5px;
+}
+
+.exit-fullscreen-btn {
+  display: none;
+}
+
+.theme-switch {
+  margin: 10px 0;
+}
+
+/* 涨跌幅颜色 */
+.change-up {
+  color: #16a34a; /* 绿色 */
+  font-weight: bold;
+}
+.change-down {
+  color: #dc2626; /* 红色 */
+  font-weight: bold;
+}
+.change-flat {
+  color: #666; /* 灰色 */
+  font-weight: bold;
 }
