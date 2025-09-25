@@ -2,12 +2,12 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>连接钱包登录（v1.52）</title>
+  <title>连接钱包登录（v1.53）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="ver">v1.52</div>
+  <div class="ver">v1.53</div>
   <div class="login-box">
     <h2>请连接钱包登录</h2>
     <button onclick="connectWallet()">连接钱包</button>
@@ -30,7 +30,7 @@
           document.getElementById("status").innerText = "❌ 连接失败: " + (err?.message || err);
         }
       }else{
-        alert("请先安装 MetaMask 或 Oky 钱包（移动端请在钱包自带浏览器打开）");
+        alert("请在钱包内置浏览器打开（MetaMask / OKX / Oky 等），或先安装扩展。");
       }
     }
   </script>
