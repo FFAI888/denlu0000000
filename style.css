@@ -1,6 +1,5 @@
-/* v1.61 style.css */
-
-/* 继承 v1.60，增加全屏按钮样式 */
+/* v1.62 style.css */
+/* 基于 v1.61，新增退出全屏按钮样式 */
 
 body {
   font-family: Arial, sans-serif;
@@ -74,6 +73,14 @@ button:hover {
 }
 .fullscreen-btn:hover {
   background: #218838;
+}
+
+.exit-fullscreen-btn {
+  background: #dc3545;
+  display: none; /* 初始隐藏，进入全屏时显示 */
+}
+.exit-fullscreen-btn:hover {
+  background: #c82333;
 }
 
 .admin-box {
