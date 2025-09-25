@@ -2,58 +2,156 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理后台 - RongChain DApp v1.75</title>
+  <title>RongChain DApp 管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .hidden { display: none; }
-    button { margin-left: 10px; padding: 6px 12px; border: none; background: #007bff; color: white; border-radius: 4px; cursor: pointer; }
-    input { padding: 6px; width: 300px; margin-top: 5px; }
-    #logs, #whitelist { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
-    #ownerResult { margin-top: 8px; font-weight: bold; color: #007bff; }
+    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+    h1 { color: #007bff; }
+    .box {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    input {
+      padding: 8px;
+      margin: 5px 0;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <h1>RongChain 管理后台</h1>
+  <h1>管理后台</h1>
+  <div id="wallet">钱包地址: 检测中...</div>
 
-  <div id="notice">正在检测权限...</div>
-
-  <div id="adminPanel" class="hidden">
-    <div id="ownerInfo">合约 Owner: 检测中...</div>
-    <div id="adminNotice" class="hidden">✅ 管理员已登录</div>
-
-    <h2>白名单地址管理</h2>
-    <div>
-      <input type="text" id="newAddress" placeholder="输入要添加的钱包地址">
-      <button onclick="addWhitelist()">添加</button>
-    </div>
-
-    <div style="margin-top: 15px;">
-      <input type="text" id="removeAddress" placeholder="输入要移除的钱包地址">
-      <button onclick="removeWhitelist()">移除</button>
-    </div>
-
-    <h2>权限管理</h2>
-    <div>
-      <input type="text" id="newOwner" placeholder="输入新的所有者地址">
-      <button onclick="transferOwnership()">转移所有权</button>
-    </div>
-
-    <!-- ✅ 新增：查询 Owner 按钮 -->
-    <div style="margin-top: 15px;">
-      <button onclick="checkOwner()">查询合约 Owner</button>
-      <div id="ownerResult"></div>
-    </div>
-
-    <h2>白名单列表</h2>
-    <div id="whitelist">加载中...</div>
-
-    <h2>白名单操作记录</h2>
-    <div id="logs">加载中...</div>
+  <div class="box">
+    <div class="label">添加白名单</div>
+    <input type="text" id="addInput" placeholder="输入钱包地址">
+    <button onclick="addWhitelist()">添加</button>
   </div>
 
+  <div class="box">
+    <div class="label">删除白名单</div>
+    <input type="text" id="removeInput" placeholder="输入钱包地址">
+    <button onclick="removeWhitelist()">删除</button>
+  </div>
+
+  <div class="box">
+    <div class="label">查询白名单</div>
+    <input type="text" id="checkInput" placeholder="输入钱包地址">
+    <button onclick="checkWhitelist()">查询</button>
+    <div id="checkResult"></div>
+  </div>
+
+  <div class="box">
+    <div class="label">转移所有权</div>
+    <input type="text" id="newOwnerInput" placeholder="新管理员地址">
+    <button onclick="transferOwnership()">转移</button>
+  </div>
+
+  <div id="status">状态: 等待操作...</div>
+
+  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="scripts/auth.js"></script>
-  <script src="scripts/admin.js"></script>
+  <script>
+    // ===== 获取钱包地址 =====
+    const params = new URLSearchParams(window.location.search);
+    const account = params.get("account");
+    if (account) {
+      document.getElementById("wallet").innerText = "钱包地址: " + account;
+    } else {
+      document.getElementById("wallet").innerText = "❌ 未检测到钱包地址，请重新登录";
+    }
+
+    // ===== 常量配置 =====
+    const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722"; // 白名单合约
+    const whitelistAbi = [
+      "function addWhitelist(address user) public",
+      "function removeWhitelist(address user) public",
+      "function isWhitelisted(address user) public view returns (bool)",
+      "function transferOwnership(address newOwner) public",
+      "function owner() public view returns (address)"
+    ];
+
+    let provider, signer, contract;
+
+    async function init() {
+      if (!window.ethereum) {
+        alert("请先安装 MetaMask");
+        return;
+      }
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, signer);
+    }
+
+    async function addWhitelist() {
+      try {
+        const addr = document.getElementById("addInput").value;
+        const tx = await contract.addWhitelist(addr);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ 已添加: " + addr;
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ 添加失败: " + e.message;
+      }
+    }
+
+    async function removeWhitelist() {
+      try {
+        const addr = document.getElementById("removeInput").value;
+        const tx = await contract.removeWhitelist(addr);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ 已删除: " + addr;
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ 删除失败: " + e.message;
+      }
+    }
+
+    async function checkWhitelist() {
+      try {
+        const addr = document.getElementById("checkInput").value;
+        const res = await contract.isWhitelisted(addr);
+        document.getElementById("checkResult").innerText = res ? "✅ 在白名单" : "❌ 不在白名单";
+      } catch (e) {
+        document.getElementById("checkResult").innerText = "❌ 查询失败: " + e.message;
+      }
+    }
+
+    async function transferOwnership() {
+      try {
+        const addr = document.getElementById("newOwnerInput").value;
+        const tx = await contract.transferOwnership(addr);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ 管理员已转移给: " + addr;
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ 转移失败: " + e.message;
+      }
+    }
+
+    init();
+  </script>
 </body>
 </html>
