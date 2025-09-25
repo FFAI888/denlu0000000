@@ -2,38 +2,35 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 登录（v1.62）</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>钱包登录 - v1.70</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 </head>
 <body>
-  <div class="ver">v1.62</div>
-  <div class="topver">最高版本：v1.62</div>
-
   <div class="content">
-    <h1>RongChain DApp 登录</h1>
-    <button id="connectBtn">🔗 连接钱包</button>
-    <div id="walletInfo" class="muted">尚未连接</div>
+    <h2>连接钱包登录</h2>
+    <button onclick="connectWallet()">连接钱包</button>
+    <p id="walletAddress">未连接</p>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <div class="ver">v1.70</div>
   <script>
     async function connectWallet(){
       if(window.ethereum){
         try{
-          const accounts = await window.ethereum.request({ method:"eth_requestAccounts" });
-          const addr = accounts[0];
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          const signer = provider.getSigner();
+          const addr = await signer.getAddress();
           localStorage.setItem("walletAddress", addr);
-          document.getElementById("walletInfo").innerText = "已连接: " + addr;
-          window.location.href="home.html";
-        }catch(err){
-          alert("连接失败: " + err.message);
+          document.getElementById("walletAddress").innerText = "已连接: " + addr;
+          window.location.href = "home.html";
+        }catch(e){
+          alert("连接失败: " + e.message);
         }
       }else{
-        alert("请安装 MetaMask 或兼容钱包");
+        alert("请安装 MetaMask 或支持 Web3 的钱包");
       }
     }
-    document.getElementById("connectBtn").onclick = connectWallet;
   </script>
 </body>
 </html>
