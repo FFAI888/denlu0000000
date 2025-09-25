@@ -19,12 +19,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    const WHITELIST_CONTRACT = "0x7e06441c018CEF60688e52C2efAce56757491caD"; 
+    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
     const whitelistAbi = [ "function isWhitelisted(address user) public view returns (bool)" ];
 
     document.getElementById("connectBtn").onclick = async () => {
       if (!window.ethereum) {
-        alert("❌ 请先安装 MetaMask 或其他钱包插件");
+        alert("❌ 请先安装 MetaMask 或 OKX 钱包");
         return;
       }
       try {
