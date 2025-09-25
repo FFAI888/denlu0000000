@@ -2,23 +2,27 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 管理后台</title>
+  <title>RongChain 管理后台（v1.29）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
-    h1 { text-align: center; margin-bottom: 30px; }
-    .box { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
-    .label { font-weight: bold; margin-bottom: 8px; }
-    input { padding: 8px; width: 80%; margin-bottom: 10px; }
-    button { padding: 8px 16px; font-size: 14px; margin-right: 5px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: #fff; }
+    body { font-family: Arial, sans-serif; padding: 18px; margin: 0; background: #f5f5f5; }
+    .ver { position: fixed; right: 12px; top: 10px; color:#999; font-size:12px;}
+    .topver { font-size:12px; color:#666; margin-bottom:8px;}
+    h1 { text-align: center; margin: 10px 0 20px; }
+    .box { margin: 12px 0; padding: 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+    .label { font-weight: bold; margin-bottom: 6px; }
+    input { padding: 10px; width: 90%; margin-bottom: 10px; border:1px solid #ddd; border-radius:6px;}
+    button { padding: 10px 16px; font-size: 14px; margin-right: 6px; cursor: pointer; border: none; border-radius: 6px; background: #007bff; color: #fff; }
     button:hover { background: #0056b3; }
-    #status { margin-top: 15px; font-weight: bold; color: #333; }
-    .back { margin-top: 20px; text-align: center; }
+    #status { margin-top: 10px; font-weight: bold; color: #333; }
+    .back { margin-top: 16px; text-align: center; }
     .back button { background: #28a745; }
     .back button:hover { background: #1c7c31; }
   </style>
 </head>
 <body>
+  <div class="ver">v1.29</div>
+  <div class="topver">最高版本：v1.29</div>
   <h1>RongChain 管理后台</h1>
 
   <div class="box">
@@ -33,15 +37,16 @@
 
   <div class="box">
     <div class="label">白名单管理</div>
-    <input type="text" id="whitelistAddress" placeholder="输入用户地址">
+    <input type="text" id="whitelistAddress" placeholder="输入用户地址（0x...）">
     <br />
     <button onclick="addWhitelist()">添加白名单</button>
     <button onclick="removeWhitelist()">移除白名单</button>
+    <div class="muted" style="color:#777;font-size:12px;margin-top:6px;">※ 只有管理员地址可操作</div>
   </div>
 
   <div class="box">
     <div class="label">转移管理员权限</div>
-    <input type="text" id="newOwnerAddress" placeholder="输入新管理员地址">
+    <input type="text" id="newOwnerAddress" placeholder="输入新管理员地址（0x...）">
     <br />
     <button onclick="transferOwnership()">转移权限</button>
   </div>
@@ -102,6 +107,7 @@
       try {
         const address = document.getElementById("whitelistAddress").value;
         const tx = await contract.addWhitelist(address);
+        document.getElementById("status").innerText = "⏳ 交易提交，等待确认...";
         await tx.wait();
         document.getElementById("status").innerText = "✅ 成功添加: " + address;
       } catch (e) {
@@ -113,6 +119,7 @@
       try {
         const address = document.getElementById("whitelistAddress").value;
         const tx = await contract.removeWhitelist(address);
+        document.getElementById("status").innerText = "⏳ 交易提交，等待确认...";
         await tx.wait();
         document.getElementById("status").innerText = "✅ 已移除: " + address;
       } catch (e) {
@@ -124,6 +131,7 @@
       try {
         const newOwner = document.getElementById("newOwnerAddress").value;
         const tx = await contract.transferOwnership(newOwner);
+        document.getElementById("status").innerText = "⏳ 交易提交，等待确认...";
         await tx.wait();
         document.getElementById("status").innerText = "✅ 管理员已转移到: " + newOwner;
         fetchOwner();
@@ -133,7 +141,7 @@
     }
 
     function goHome() {
-      window.location.href = "home.html?account=" + account;
+      window.location.href = "home.html?account=" + (account || "");
     }
 
     init();
