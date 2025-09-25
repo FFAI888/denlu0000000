@@ -14,6 +14,7 @@
     <h1>RongChain 首页</h1>
     <div id="wallet" class="muted">钱包地址: 检测中...</div>
 
+    <!-- 余额显示 -->
     <div class="box">
       <div class="label">RongChain 余额</div>
       <div id="balance" class="muted">检测中...</div>
@@ -24,6 +25,7 @@
       <div id="crcBalance" class="muted">检测中...</div>
     </div>
 
+    <!-- 价格显示 -->
     <div class="row">
       <div class="box">
         <div class="label">RongChain / USDT 现价</div>
@@ -46,12 +48,14 @@
       <div id="crcChart" class="chart"></div>
     </div>
 
+    <!-- 管理后台入口 -->
     <div class="admin-box">
       <div class="label">管理员功能</div>
       <button onclick="goAdmin()">进入管理后台</button>
     </div>
   </div>
 
+  <!-- 底部导航栏 -->
   <div class="navbar">
     <div class="nav-item">首页</div>
     <div class="nav-item">拼团</div>
@@ -60,6 +64,7 @@
     <div class="nav-item">我的</div>
   </div>
 
+  <!-- 依赖库 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <script src="app.js"></script>
