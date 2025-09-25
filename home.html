@@ -2,71 +2,58 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>首页 - RongChain DApp v1.74</title>
+  <title>RongChain DApp 首页</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     .hidden { display: none; }
-    #debug {
-      margin-top: 20px;
-      white-space: pre-wrap;
-      font-size: 14px;
-      color: #555;
-      background: #f9f9f9;
-      padding: 10px;
-      border: 1px solid #ccc;
-    }
-    #adminBtn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    #contractCheck {
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      background: #eef;
-    }
-    #contractCheck input { width: 300px; padding: 5px; }
-    #contractCheck button { padding: 6px 12px; margin-left: 8px; }
-    #checkResult { margin-top: 10px; white-space: pre-wrap; }
+    button { padding: 8px 16px; border: none; border-radius: 4px; background: #007bff; color: white; cursor: pointer; margin-top: 10px; }
+    #balances, #prices { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+    #debug { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #eee; white-space: pre-line; }
   </style>
 </head>
 <body>
-  <h1>RongChain DApp 首页</h1>
+  <h1>RongChain 首页</h1>
 
-  <div id="loginNotice">⚠️ 请先连接钱包登录！</div>
+  <!-- 显示钱包地址 -->
+  <div id="walletAddress">钱包地址: 检测中...</div>
+  <div id="ownerAddress">合约 Owner: 检测中...</div>
+  <div id="adminWallet" class="hidden">管理员钱包地址: </div>
+  <div id="adminNotice" class="hidden">✅ 管理员已登录</div>
 
-  <div id="appContent" class="hidden">
-    <div id="walletAddress">钱包地址: 检测中...</div>
-    <div id="ownerAddress">合约 Owner: 检测中...</div>
-    <div id="adminWallet" class="hidden">管理员钱包地址: 检测中...</div>
-    <div id="adminNotice" class="hidden">✅ 管理员已登录</div>
-    <div id="price">RongChain/USDT 价格: 检测中...</div>
-    <div id="crcPrice">CRC/USDT 价格: 检测中...</div>
+  <!-- 余额显示 -->
+  <div id="balances">
+    <h2>余额</h2>
     <div id="rongBalance">RongChain 余额: 检测中...</div>
     <div id="crcBalance">CRC 余额: 检测中...</div>
-
-    <button id="adminBtn" class="hidden" onclick="goAdmin()">进入管理后台</button>
-
-    <h3 id="debugTitle" class="hidden">调试信息</h3>
-    <div id="debug" class="hidden"></div>
-
-    <!-- 合约检测工具（仅管理员可见） -->
-    <div id="contractCheck" class="hidden">
-      <h3>合约检测工具</h3>
-      <input type="text" id="contractAddr" placeholder="输入合约地址 (0x...)">
-      <button id="checkBtn">检测</button>
-      <div id="checkResult">结果将在这里显示</div>
-    </div>
   </div>
 
+  <!-- 价格显示 -->
+  <div id="prices">
+    <h2>价格</h2>
+    <div id="price">RongChain/USDT 价格: 检测中...</div>
+    <div id="crcPrice">RongChain/CRC 价格: 检测中...</div>
+  </div>
+
+  <!-- 进入管理后台 -->
+  <div style="margin-top: 20px;">
+    <button id="adminBtn" class="hidden" onclick="goAdmin()">进入管理后台</button>
+  </div>
+
+  <!-- 合约检测工具（仅管理员可见） -->
+  <h2 id="debugTitle" class="hidden">合约检测工具</h2>
+  <div id="contractCheck" class="hidden">
+    <input type="text" id="contractAddr" placeholder="输入合约地址">
+    <button id="checkBtn">检测</button>
+    <div id="checkResult" style="margin-top: 10px;"></div>
+  </div>
+
+  <!-- 调试信息（仅管理员可见） -->
+  <div id="debug" class="hidden">调试区</div>
+
+  <!-- 脚本引入 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="auth.js"></script>
-  <script src="home.js"></script>
+  <script src="scripts/auth.js"></script>
+  <script src="scripts/home.js"></script>
 </body>
 </html>
