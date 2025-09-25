@@ -1,4 +1,4 @@
-/* v1.53 首页逻辑：余额 + 价格 + 交易所风格双K线 + 刷新间隔 + 本地缓存 */
+/* v1.54 首页逻辑：余额 + 价格 + 链上实时双K线 + 刷新间隔 + 本地缓存 */
 
 // 代币与池子（BSC）
 const RONGCHAIN_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e";
@@ -6,10 +6,6 @@ const CRC_TOKEN       = "0x5b2fe2b06e714b7bea4fd35b428077d850c48087";
 const USDT            = "0x55d398326f99059ff775485246999027b3197955";
 const RONG_USDT_PAIR  = "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795";
 const RONG_CRC_PAIR   = "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5";
-
-// DexScreener API（RONG/USDT、RONG/CRC）
-const DS_RONG = `https://api.dexscreener.com/latest/dex/pairs/bsc/${RONG_USDT_PAIR}`;
-const DS_RCRC = `https://api.dexscreener.com/latest/dex/pairs/bsc/${RONG_CRC_PAIR}`;
 
 const erc20Abi = [
   "function decimals() view returns (uint8)",
@@ -62,7 +58,7 @@ async function fetchBalance(tokenAddr, elId){
   }
 }
 
-// —— 链上价格（用于数值展示 & CRC 推导） —— //
+// —— 链上价格 —— //
 async function priceFromPair(pairAddr, base, quote){
   const p = getProvider();
   const pair = new ethers.Contract(pairAddr, pairAbi, p);
@@ -77,33 +73,10 @@ async function priceFromPair(pairAddr, base, quote){
   } else if (token1===baseL && token0===quoteL){
     return Number(ethers.utils.formatUnits(res[0], d0)) / Number(ethers.utils.formatUnits(res[1], d1));
   }
-  // 顺序异常时的稳妥回退（不改变既有逻辑）
   return Number(ethers.utils.formatUnits(res[0], d0)) / Number(ethers.utils.formatUnits(res[1], d1));
 }
 
-async function updateSpotPrices(){
-  // RONG/USDT
-  try{
-    const pRU = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
-    const priceEl = document.getElementById("price");
-    if (priceEl) priceEl.innerText = `≈ ${pRU.toFixed(6)} USDT`;
-  }catch(_){
-    const priceEl = document.getElementById("price"); if (priceEl) priceEl.innerText = "❌ 获取失败";
-  }
-
-  // RONG/CRC 与 CRC≈USDT 推导
-  try{
-    const pRU = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
-    const pRC = await priceFromPair(RONG_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
-    const crcUsdt = pRU / pRC; // 1 CRC ≈ ?
-    const el = document.getElementById("crcPrice");
-    if (el) el.innerText = `${pRC.toFixed(6)} CRC（推导≈ ${crcUsdt.toFixed(6)} USDT/CRC）`;
-  }catch(_){
-    const el = document.getElementById("crcPrice"); if (el) el.innerText = "❌ 获取失败";
-  }
-}
-
-// —— 交易所风格 K 线（轻量库 + 本地聚合） —— //
+// —— K 线图 —— //
 function createChart(containerId){
   const el = document.getElementById(containerId);
   if (!el) return null;
@@ -115,7 +88,6 @@ function createChart(containerId){
   });
 }
 
-// 通用烛形缓冲（把实时价聚合成不同周期蜡烛，并持久化到 localStorage）
 class CandleBuffer {
   constructor(storageKey){ this.key = storageKey; this.candles = this.load(); this.bucket = null; }
   load(){ try{ const t = localStorage.getItem(this.key); return t? JSON.parse(t):[]; }catch{ return []; } }
@@ -132,29 +104,26 @@ class CandleBuffer {
       c.low  = Math.min(c.low,  price);
       c.close= price;
     }
-    // 限制最大条数，避免 localStorage 过大
     if(this.candles.length>2000) this.candles = this.candles.slice(-1200);
     this.save();
     return this.candles;
   }
 }
 
-// RONG 图表（DexScreener 现价）
+// RONG 图表
 let rChart=null, rSeries=null, rBuf=null, rTF=parseInt(localStorage.getItem("rong_tf")||1);
 function initRongChart(){
   rChart = createChart("rongChart");
   if (!rChart) return;
   rSeries = rChart.addCandlestickSeries();
   rBuf = new CandleBuffer("candles_rong_usdt");
-  // 恢复历史
   if(rBuf.candles.length) rSeries.setData(rBuf.candles);
-  // 记忆周期高亮
   markActive("rfBtns","rbtn"+rTF);
   window.addEventListener('resize', ()=>{ rChart.applyOptions({ width: document.getElementById('rongChart').clientWidth }); });
 }
-function switchRongTF(min){ rTF=min; localStorage.setItem("rong_tf",min); /* 清图但保留本地历史 */ rSeries.setData(rBuf.candles); markActive("rfBtns","rbtn"+min); }
+function switchRongTF(min){ rTF=min; localStorage.setItem("rong_tf",min); rSeries.setData(rBuf.candles); markActive("rfBtns","rbtn"+min); }
 
-// CRC 图表（推导 USDT）
+// CRC 图表
 let cChart=null, cSeries=null, cBuf=null, cTF=parseInt(localStorage.getItem("crc_tf")||1);
 function initCrcChart(){
   cChart = createChart("crcChart");
@@ -173,7 +142,7 @@ function markActive(groupId,activeId){
   const el = document.getElementById(activeId); if(el) el.classList.add("active");
 }
 
-// —— 刷新控制（价格/余额/蜡烛） —— //
+// —— 刷新控制 —— //
 let refreshInterval = parseInt(localStorage.getItem("refresh_ms")||1000);
 let refreshTimer = null;
 
@@ -186,29 +155,30 @@ function setRefresh(ms){
   restartTimers();
 }
 
+// —— 每次刷新 —— //
 async function tickOnce(){
-  // 基础 UI
   showWallet();
-  // 余额
   fetchBalance(RONGCHAIN_TOKEN, "balance");
   fetchBalance(CRC_TOKEN,  "crcBalance");
-  // 价格文本
-  updateSpotPrices();
 
-  // RONG: 用 DexScreener 现价更新蜡烛
   try{
-    const r = await fetch(DS_RONG); const d = await r.json();
-    const price = d?.pair?.priceUsd ? parseFloat(d.pair.priceUsd) : null;
-    if(price && rBuf && rSeries){ const arr = rBuf.update(price, rTF); rSeries.setData(arr); }
-  }catch(_){ /* 静默 */ }
-
-  // CRC: 由链上两池推导 CRC≈USDT，然后聚合蜡烛
-  try{
+    // RONG/USDT
     const pRU = await priceFromPair(RONG_USDT_PAIR, RONGCHAIN_TOKEN, USDT);
+    document.getElementById("price").innerText = `≈ ${pRU.toFixed(6)} USDT`;
+
+    // RONG/CRC 与 CRC≈USDT 推导
     const pRC = await priceFromPair(RONG_CRC_PAIR, RONGCHAIN_TOKEN, CRC_TOKEN);
     const crcUsdt = pRU / pRC;
+    document.getElementById("crcPrice").innerText = `${pRC.toFixed(6)} CRC（≈ ${crcUsdt.toFixed(6)} USDT）`;
+
+    // 更新 K 线（RONG）
+    if(rBuf && rSeries){ const arr = rBuf.update(pRU, rTF); rSeries.setData(arr); }
+
+    // 更新 K 线（CRC）
     if(cBuf && cSeries){ const arr = cBuf.update(crcUsdt, cTF); cSeries.setData(arr); }
-  }catch(_){ /* 静默 */ }
+  }catch(e){
+    console.error("价格或行情更新失败", e);
+  }
 }
 
 function restartTimers(){
@@ -219,10 +189,7 @@ function restartTimers(){
 // —— 启动 —— //
 (function start(){
   showWallet();
-  // 初始化图表
   initRongChart(); initCrcChart();
-  // 刷新选择器
   setRefresh(refreshInterval);
-  // 首次立即跑一次
   tickOnce();
 })();
