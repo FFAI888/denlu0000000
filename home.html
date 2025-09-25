@@ -33,11 +33,6 @@
     const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
     const whitelistAbi = [ "function owner() view returns (address)" ];
 
-    function getBasePath() {
-      const path = window.location.pathname;
-      return path.includes("/frontend/") ? "/frontend/" : "/";
-    }
-
     async function checkAdmin() {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -50,8 +45,7 @@
     }
 
     function goAdmin() {
-      const base = getBasePath();
-      window.location.href = base + "admin.html?account=" + account;
+      window.location.href = "admin.html?account=" + account;
     }
 
     checkAdmin();
