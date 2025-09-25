@@ -5,50 +5,14 @@
   <title>RongChain 管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .box {
-      margin: 20px 0;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-    }
-    .label {
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    input {
-      padding: 8px;
-      width: 80%;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 14px;
-      margin-right: 5px;
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      background: #007bff;
-      color: white;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #status {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #333;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .box { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+    .label { font-weight: bold; margin-bottom: 8px; }
+    input { padding: 8px; width: 80%; margin-bottom: 10px; }
+    button { padding: 8px 16px; font-size: 14px; margin-right: 5px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: #fff; }
+    button:hover { background: #0056b3; }
+    #status { margin-top: 15px; font-weight: bold; color: #333; }
   </style>
 </head>
 <body>
@@ -67,7 +31,7 @@
   <div class="box">
     <div class="label">白名单管理</div>
     <input type="text" id="whitelistAddress" placeholder="输入用户地址">
-    <br>
+    <br />
     <button onclick="addWhitelist()">添加白名单</button>
     <button onclick="removeWhitelist()">移除白名单</button>
   </div>
@@ -75,17 +39,15 @@
   <div class="box">
     <div class="label">转移管理员权限</div>
     <input type="text" id="newOwnerAddress" placeholder="输入新管理员地址">
-    <br>
+    <br />
     <button onclick="transferOwnership()">转移权限</button>
   </div>
 
   <div id="status">状态: 等待操作...</div>
 
-  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    // ✅ 使用你部署的合约地址
-    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5"; 
+    const WHITELIST_CONTRACT = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
     const whitelistAbi = [
       "function owner() view returns (address)",
       "function addWhitelist(address user) public",
@@ -103,7 +65,6 @@
       provider = new ethers.providers.Web3Provider(window.ethereum);
       signer = provider.getSigner();
       contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, signer);
-
       fetchOwner();
     }
 
