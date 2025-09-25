@@ -17,8 +17,12 @@
 
   <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="scripts/auth.js"></script>
   <script>
+    const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722"; // 部署的白名单合约
+    const whitelistAbi = [
+      "function isWhitelisted(address user) public view returns (bool)"
+    ];
+
     document.getElementById("connectBtn").onclick = async () => {
       if (!window.ethereum) {
         alert("❌ 请先安装 MetaMask 或其他钱包插件");
@@ -29,9 +33,21 @@
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         const account = accounts[0];
+
         document.getElementById("status").innerText = "✅ 已连接: " + account;
 
-        window.location.href = "home.html?account=" + account;
+        // ===== 白名单校验 =====
+        const contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
+        const allowed = await contract.isWhitelisted(account);
+
+        if (allowed) {
+          document.getElementById("status").innerText = "✅ 白名单验证通过，正在进入首页...";
+          setTimeout(() => {
+            window.location.href = "home.html?account=" + account;
+          }, 1000);
+        } else {
+          document.getElementById("status").innerText = "❌ 该地址不在白名单，禁止访问首页";
+        }
       } catch (err) {
         document.getElementById("status").innerText = "❌ 连接失败: " + err.message;
       }
