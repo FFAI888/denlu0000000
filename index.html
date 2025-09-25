@@ -17,7 +17,6 @@
 
   <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- auth.js 必须在 home/admin 之前加载 -->
   <script src="scripts/auth.js"></script>
   <script>
     document.getElementById("connectBtn").onclick = async () => {
@@ -32,7 +31,6 @@
         const account = accounts[0];
         document.getElementById("status").innerText = "✅ 已连接: " + account;
 
-        // 成功后跳转到首页
         window.location.href = "home.html?account=" + account;
       } catch (err) {
         document.getElementById("status").innerText = "❌ 连接失败: " + err.message;
