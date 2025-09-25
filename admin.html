@@ -2,17 +2,25 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain DApp 管理后台</title>
+  <title>RongChain 管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-    h1 { color: #007bff; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
     .box {
       margin: 20px 0;
       padding: 15px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      background: #f9f9f9;
+      background: #fff;
     }
     .label {
       font-weight: bold;
@@ -20,56 +28,55 @@
     }
     input {
       padding: 8px;
-      margin: 5px 0;
       width: 80%;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      margin-bottom: 10px;
     }
     button {
-      padding: 8px 12px;
-      margin: 5px;
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-right: 5px;
       cursor: pointer;
-      background: #007bff;
-      color: white;
       border: none;
       border-radius: 4px;
+      background: #007bff;
+      color: white;
     }
     button:hover {
       background: #0056b3;
     }
     #status {
-      margin-top: 10px;
+      margin-top: 15px;
       font-weight: bold;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <h1>管理后台</h1>
-  <div id="wallet">钱包地址: 检测中...</div>
+  <h1>RongChain 管理后台</h1>
 
   <div class="box">
-    <div class="label">添加白名单</div>
-    <input type="text" id="addInput" placeholder="输入钱包地址">
-    <button onclick="addWhitelist()">添加</button>
+    <div class="label">当前管理员地址</div>
+    <div id="currentOwner">检测中...</div>
   </div>
 
   <div class="box">
-    <div class="label">删除白名单</div>
-    <input type="text" id="removeInput" placeholder="输入钱包地址">
-    <button onclick="removeWhitelist()">删除</button>
+    <div class="label">我的身份</div>
+    <div id="myRole">检测中...</div>
   </div>
 
   <div class="box">
-    <div class="label">查询白名单</div>
-    <input type="text" id="checkInput" placeholder="输入钱包地址">
-    <button onclick="checkWhitelist()">查询</button>
-    <div id="checkResult"></div>
+    <div class="label">白名单管理</div>
+    <input type="text" id="whitelistAddress" placeholder="输入用户地址">
+    <br>
+    <button onclick="addWhitelist()">添加白名单</button>
+    <button onclick="removeWhitelist()">移除白名单</button>
   </div>
 
   <div class="box">
-    <div class="label">转移所有权</div>
-    <input type="text" id="newOwnerInput" placeholder="新管理员地址">
-    <button onclick="transferOwnership()">转移</button>
+    <div class="label">转移管理员权限</div>
+    <input type="text" id="newOwnerAddress" placeholder="输入新管理员地址">
+    <br>
+    <button onclick="transferOwnership()">转移权限</button>
   </div>
 
   <div id="status">状态: 等待操作...</div>
@@ -77,23 +84,12 @@
   <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    // ===== 获取钱包地址 =====
-    const params = new URLSearchParams(window.location.search);
-    const account = params.get("account");
-    if (account) {
-      document.getElementById("wallet").innerText = "钱包地址: " + account;
-    } else {
-      document.getElementById("wallet").innerText = "❌ 未检测到钱包地址，请重新登录";
-    }
-
-    // ===== 常量配置 =====
-    const WHITELIST_CONTRACT = "0x8b7D5050725631FFE42c4e2dCfc999c30228b722"; // 白名单合约
+    const WHITELIST_CONTRACT = "0xa1852413ca02e6d2f653dd88586eae822e790d96b1e1aabcfc9d0a70b1175c66";
     const whitelistAbi = [
+      "function owner() view returns (address)",
       "function addWhitelist(address user) public",
       "function removeWhitelist(address user) public",
-      "function isWhitelisted(address user) public view returns (bool)",
-      "function transferOwnership(address newOwner) public",
-      "function owner() public view returns (address)"
+      "function transferOwnership(address newOwner) public"
     ];
 
     let provider, signer, contract;
@@ -106,14 +102,35 @@
       provider = new ethers.providers.Web3Provider(window.ethereum);
       signer = provider.getSigner();
       contract = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, signer);
+
+      fetchOwner();
+    }
+
+    async function fetchOwner() {
+      try {
+        const owner = await contract.owner();
+        document.getElementById("currentOwner").innerText = owner;
+
+        const currentAccount = await signer.getAddress();
+        if (currentAccount.toLowerCase() === owner.toLowerCase()) {
+          document.getElementById("myRole").innerText = "✅ 你是管理员";
+          document.getElementById("myRole").style.color = "green";
+        } else {
+          document.getElementById("myRole").innerText = "❌ 你是普通用户";
+          document.getElementById("myRole").style.color = "red";
+        }
+      } catch (e) {
+        document.getElementById("currentOwner").innerText = "❌ 查询失败: " + e.message;
+        document.getElementById("myRole").innerText = "❌ 无法检测身份";
+      }
     }
 
     async function addWhitelist() {
       try {
-        const addr = document.getElementById("addInput").value;
-        const tx = await contract.addWhitelist(addr);
+        const address = document.getElementById("whitelistAddress").value;
+        const tx = await contract.addWhitelist(address);
         await tx.wait();
-        document.getElementById("status").innerText = "✅ 已添加: " + addr;
+        document.getElementById("status").innerText = "✅ 成功添加到白名单: " + address;
       } catch (e) {
         document.getElementById("status").innerText = "❌ 添加失败: " + e.message;
       }
@@ -121,31 +138,22 @@
 
     async function removeWhitelist() {
       try {
-        const addr = document.getElementById("removeInput").value;
-        const tx = await contract.removeWhitelist(addr);
+        const address = document.getElementById("whitelistAddress").value;
+        const tx = await contract.removeWhitelist(address);
         await tx.wait();
-        document.getElementById("status").innerText = "✅ 已删除: " + addr;
+        document.getElementById("status").innerText = "✅ 已移除白名单: " + address;
       } catch (e) {
-        document.getElementById("status").innerText = "❌ 删除失败: " + e.message;
-      }
-    }
-
-    async function checkWhitelist() {
-      try {
-        const addr = document.getElementById("checkInput").value;
-        const res = await contract.isWhitelisted(addr);
-        document.getElementById("checkResult").innerText = res ? "✅ 在白名单" : "❌ 不在白名单";
-      } catch (e) {
-        document.getElementById("checkResult").innerText = "❌ 查询失败: " + e.message;
+        document.getElementById("status").innerText = "❌ 移除失败: " + e.message;
       }
     }
 
     async function transferOwnership() {
       try {
-        const addr = document.getElementById("newOwnerInput").value;
-        const tx = await contract.transferOwnership(addr);
+        const newOwner = document.getElementById("newOwnerAddress").value;
+        const tx = await contract.transferOwnership(newOwner);
         await tx.wait();
-        document.getElementById("status").innerText = "✅ 管理员已转移给: " + addr;
+        document.getElementById("status").innerText = "✅ 管理员已转移到: " + newOwner;
+        fetchOwner();
       } catch (e) {
         document.getElementById("status").innerText = "❌ 转移失败: " + e.message;
       }
