@@ -2,13 +2,13 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>RongChain 首页（v1.60）</title>
+  <title>RongChain 首页（v1.61）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="ver">v1.60</div>
-  <div class="topver">最高版本：v1.60</div>
+  <div class="ver">v1.61</div>
+  <div class="topver">最高版本：v1.61</div>
 
   <div class="content">
     <h1>RongChain 首页</h1>
@@ -60,8 +60,9 @@
       <div class="theme-switch">
         <button onclick="switchTheme('light')" id="themeLight">亮色</button>
         <button onclick="switchTheme('dark')" id="themeDark">暗色</button>
+        <button class="fullscreen-btn" onclick="openFullscreen('dexContainer')">全屏查看</button>
       </div>
-      <div class="row">
+      <div class="row" id="dexContainer">
         <div class="box" style="margin:0;">
           <div class="muted">RONG / USDT</div>
           <iframe id="dexRongUsdt"
@@ -93,7 +94,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- 删除了 Lightweight Charts 的 script 引用 -->
   <script src="app.js"></script>
 </body>
 </html>
