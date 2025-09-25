@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/**
- * @title Whitelist v1.53
- * @dev 简单白名单：Owner 管理 + 转移 Owner + 添加/移除白名单 + 查询
- */
 contract Whitelist {
     address public owner;
     mapping(address => bool) private whitelist;
+    address[] private whitelistArray; // ✅ 新增：记录所有被操作过的地址
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event WhitelistAdded(address indexed account);
-    event WhitelistRemoved(address indexed account);
+    event Whitelisted(address indexed user, bool status);
 
     constructor() {
         owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
     }
 
     modifier onlyOwner() {
@@ -24,22 +19,50 @@ contract Whitelist {
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Invalid new owner");
+        require(newOwner != address(0), "Zero addr");
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
 
-    function addWhitelist(address account) external onlyOwner {
-        whitelist[account] = true;
-        emit WhitelistAdded(account);
+    function setWhitelisted(address user, bool status) external onlyOwner {
+        whitelist[user] = status;
+
+        // ✅ 如果是第一次操作该地址，加入数组
+        bool exists = false;
+        for (uint i = 0; i < whitelistArray.length; i++) {
+            if (whitelistArray[i] == user) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            whitelistArray.push(user);
+        }
+
+        emit Whitelisted(user, status);
     }
 
-    function removeWhitelist(address account) external onlyOwner {
-        whitelist[account] = false;
-        emit WhitelistRemoved(account);
+    function isWhitelisted(address user) external view returns (bool) {
+        return whitelist[user];
     }
 
-    function isWhitelisted(address account) external view returns (bool) {
-        return whitelist[account];
+    // ✅ 新增：获取完整白名单
+    function getWhitelist() external view returns (address[] memory) {
+        uint count = 0;
+        for (uint i = 0; i < whitelistArray.length; i++) {
+            if (whitelist[whitelistArray[i]]) {
+                count++;
+            }
+        }
+
+        address[] memory result = new address[](count);
+        uint j = 0;
+        for (uint i = 0; i < whitelistArray.length; i++) {
+            if (whitelist[whitelistArray[i]]) {
+                result[j] = whitelistArray[i];
+                j++;
+            }
+        }
+        return result;
     }
 }
