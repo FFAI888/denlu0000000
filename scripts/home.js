@@ -1,12 +1,12 @@
-// v1.74 首页脚本
-// 功能：全局权限拦截、价格刷新、余额刷新、白名单校验、管理员提示、合约检测工具
+// v1.75 首页脚本
+// 功能：权限拦截、余额刷新、价格刷新、管理员提示、合约检测工具
 
 (async function () {
   "use strict";
 
   // ===== 全局权限拦截（必须是白名单用户）=====
   const account = await enforceAuth({ requireAdmin: false });
-  if (!account) return; // 已被跳转走
+  if (!account) return;
 
   // ===== 常量配置 =====
   const RONG_TOKEN = "0x0337a015467af6605c4262d9f02a3dcd8b576f7e"; // RongChain
@@ -34,7 +34,6 @@
     "function isWhitelisted(address user) view returns (bool)"
   ];
 
-  // ===== 初始化 provider =====
   const provider = new ethers.providers.Web3Provider(window.ethereum);
 
   // ===== 工具函数 =====
@@ -42,7 +41,6 @@
     const el = document.getElementById(id);
     if (el) el.innerText = text;
   }
-
   function show(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove("hidden");
@@ -51,9 +49,8 @@
   // ===== 钱包地址显示 =====
   setText("walletAddress", "钱包地址: " + account);
 
-  // ===== 校验白名单 & 管理员 =====
+  // ===== 校验管理员 =====
   const whitelist = new ethers.Contract(WHITELIST_CONTRACT, whitelistAbi, provider);
-
   let realOwner = null;
   try {
     realOwner = await whitelist.owner();
@@ -63,7 +60,6 @@
   } catch (e) {
     setText("ownerAddress", "❌ 获取 Owner 失败: " + e.message);
   }
-
   const isAdmin = (realOwner && realOwner.toLowerCase() === account.toLowerCase());
   if (isAdmin) {
     show("adminNotice");
