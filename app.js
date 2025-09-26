@@ -20,10 +20,10 @@ async function connectWallet(){
       if(el) el.innerText = "✅ 已连接: " + addr;
 
     }catch(e){
-      showToast("❌ 连接失败: " + e.message, "error");
+      showToast("连接失败: " + e.message, "error");
     }
   }else{
-    showToast("⚠️ 请安装 MetaMask 或支持 Web3 的钱包", "warning");
+    showToast("请安装 MetaMask 或支持 Web3 的钱包", "warning");
   }
 }
 
@@ -32,7 +32,7 @@ const BSC_CHAIN_ID = "0x38";
 
 async function checkNetwork(){
   if(!window.ethereum){
-    showToast("⚠️ 未检测到钱包", "warning");
+    showToast("未检测到钱包", "warning");
     return;
   }
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -40,9 +40,9 @@ async function checkNetwork(){
   const chainIdHex = "0x" + network.chainId.toString(16);
 
   if(chainIdHex !== BSC_CHAIN_ID){
-    showToast("❌ 当前不是 BSC 主网，请切换网络！", "error");
+    showToast("当前不是 BSC 主网，请切换网络！", "error");
   }else{
-    showToast("✅ 已连接到 BSC 主网", "success");
+    showToast("已连接到 BSC 主网", "success");
   }
 }
 
@@ -58,10 +58,20 @@ function showToast(msg, type){
 
   const div = document.createElement("div");
   div.className = "toast " + type;
-  div.innerText = msg;
+
+  let icon = "";
+  if(type === "success") icon = "✅";
+  if(type === "error")   icon = "❌";
+  if(type === "warning") icon = "⚠️";
+
+  div.innerHTML = `<span class="icon">${icon}</span><span>${msg}</span>`;
   box.appendChild(div);
 
-  setTimeout(()=> div.remove(), 3000);
+  // 显示3秒后执行上滑退出动画
+  setTimeout(()=>{
+    div.classList.add("hide");
+    setTimeout(()=> div.remove(), 300); // 动画结束后删除
+  }, 3000);
 }
 
 // ---------------- 白名单 & 管理员检测 ----------------
