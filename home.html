@@ -1,20 +1,26 @@
-<!-- version: v1.01 -->
+<!-- version: v1.02 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>首页</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <!-- 版本号徽标 -->
-  <div class="ver-badge">v1.01</div>
+  <div class="ver-badge">v1.02</div>
 
-  <!-- ✅ 新增：基于图片颜色的渐变背景层 -->
+  <!-- 基于图片取色的渐变背景层（可锁定为固定主题） -->
   <div class="bg-color" id="bgColor"></div>
-  <!-- 原有：背景图片层（保留，不删除） -->
+  <!-- 原有背景图片层（保留） -->
   <div class="bg"></div>
+
+  <!-- 新增：主题操作（锁定/解除） -->
+  <div class="theme-ops">
+    <button id="lockThemeBtn" class="mini">🔒 锁定主题色</button>
+    <button id="unlockThemeBtn" class="mini ghost">🔓 解除锁定</button>
+  </div>
 
   <header class="topbar">
     <div class="left">
