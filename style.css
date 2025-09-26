@@ -1,48 +1,21 @@
-/* v9.8 style.css */
-
-/* ===== 全局 ===== */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html, body {
-  height: 100%;
-  font-family: Arial, sans-serif;
-  background: #111;
-  color: #fff;
-  overflow-x: hidden; /* 禁止横向滚动条 */
-}
+/* 通用样式 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: Arial, sans-serif; background: #111; color: #fff; overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
 
-/* ===== 背景 ===== */
+/* 背景 */
 .bg {
-  position: fixed;
-  top:0; left:0;
+  position: fixed; top:0; left:0;
   width:100%; height:100%;
   background: url("tupian/bg.jpg") center/cover no-repeat;
   z-index: -1;
   filter: blur(4px) brightness(0.6);
 }
 
-/* ===== 顶部栏 ===== */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 16px;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-}
-.topbar .title { font-size: 18px; font-weight: bold; }
-.topbar .badge { font-size: 12px; opacity: 0.8; }
+/* 容器 */
+.container { padding: 16px; }
 
-/* ===== 容器 ===== */
-.container {
-  padding: 16px;
-}
-
-/* ===== 登录卡片 ===== */
+/* 登录卡片 */
 .login-card {
   background: rgba(0,0,0,0.7);
   border-radius: 10px;
@@ -51,14 +24,19 @@ a { color: inherit; text-decoration: none; }
   margin: 80px auto;
   text-align: center;
 }
-.login-card .logo {
-  width: 80px; height: 80px;
-  margin-bottom: 12px;
-}
+.login-card .logo { width: 80px; height: 80px; margin-bottom: 12px; }
 .login-card h2 { margin-bottom: 8px; }
 .login-card .sub { font-size: 14px; margin-bottom: 12px; }
 
-/* ===== 面板 ===== */
+/* 顶部栏 */
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.6);
+}
+.topbar .title { font-size: 18px; font-weight: bold; }
+
+/* 面板 */
 .panel {
   background: rgba(255,255,255,0.05);
   border-radius: 8px;
@@ -67,15 +45,8 @@ a { color: inherit; text-decoration: none; }
 }
 .panel h3 { margin-bottom: 8px; font-size: 16px; }
 
-/* ===== 输入框、按钮 ===== */
-.input {
-  flex:1;
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
-  margin-right: 8px;
-}
-.btn, .btn-primary, .btn.warn, .mini {
+/* 按钮 */
+.btn-primary, .mini.danger {
   padding: 8px 12px;
   border-radius: 6px;
   border: none;
@@ -83,88 +54,16 @@ a { color: inherit; text-decoration: none; }
   font-size: 14px;
 }
 .btn-primary { background:#2e8bff; color:#fff; }
-.btn.warn { background:#ff9800; color:#fff; }
-.btn.danger, .mini.danger { background:#f44336; color:#fff; }
-.btn:hover { opacity: 0.9; }
+.mini.danger { background:#f44336; color:#fff; }
 
-/* ===== 行情卡片 ===== */
-.quotes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.quote {
-  flex: 1 1 30%;
-  background: rgba(0,0,0,0.4);
-  padding: 8px;
-  border-radius: 6px;
-  text-align: center;
-}
-.q-title { font-size: 13px; opacity: 0.7; }
-.q-price { font-size: 16px; font-weight: bold; }
-
-/* ===== K线图 ===== */
-canvas#klineCanvas {
-  width: 100%;
-  margin-top: 10px;
-  border-radius: 6px;
-  background: #000;
-}
-
-/* ===== 底部导航 ===== */
-.tabbar {
-  position: fixed;
-  bottom:0; left:0;
-  width:100%;
-  display:flex;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(6px);
-}
-.tab {
-  flex:1;
-  text-align:center;
-  padding:10px;
-  font-size:14px;
-  opacity:0.8;
-}
-.tab.active { opacity:1; font-weight:bold; }
-
-/* ===== 行排列 ===== */
-.row {
-  display:flex;
-  align-items:center;
-  margin-bottom:8px;
-}
-
-/* ===== Toast 提示 ===== */
+/* Toast */
 #toastBox {
-  position: fixed;
-  top: 16px;
-  right: 16px;
+  position: fixed; top: 16px; right: 16px;
   z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 .toast {
-  min-width: 160px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 14px;
-  animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-}
-.toast.info { background:#2196f3; }
-.toast.success { background:#4caf50; }
-.toast.error { background:#f44336; }
-.toast.warning { background:#ff9800; }
-
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(-10px); }
-  to { opacity:1; transform:translateY(0); }
-}
-@keyframes fadeOut {
-  from { opacity:1; transform:translateY(0); }
-  to { opacity:0; transform:translateY(-10px); }
+  min-width: 160px; margin-bottom: 8px;
+  padding: 10px 14px; border-radius: 6px;
+  color: #fff; font-size: 14px;
+  background: #2196f3;
 }
