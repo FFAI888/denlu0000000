@@ -1,15 +1,17 @@
-/* version: v1.21 */
+/* version: v1.25 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
 
-/* 背景图片：确保路径正确 ./tupian/bg.jpg */
-.bg {
-  position: fixed; top:0; left:0;
-  width:100%; height:100%;
-  background-image: url("./tupian/bg.jpg");
+/* ✅ 页面背景直接用图片 */
+body {
+  background-image: url("tupian/bg.jpg");
   background-size: cover;
   background-position: center;
-  z-index: -1;
+  background-repeat: no-repeat;
 }
 
 /* 版本号浮标 */
@@ -27,23 +29,14 @@ html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
 /* 容器 */
 .container { padding: 16px; text-align: center; }
 
-/* 登录卡片（含遮罩与层级） */
+/* 登录卡片（✅ 半透明遮罩） */
 .login-card {
   position: relative;
   border-radius: 10px;
   overflow: hidden;
   max-width: 320px;
   margin: 100px auto;
-  background: transparent; /* 由遮罩控制可读性 */
-}
-.card-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 0;                 /* 重要：在内容之下 */
-}
-.card-content {
-  position: relative;
-  z-index: 1;                 /* 重要：在遮罩之上 */
+  background: rgba(0,0,0,0.6); /* ✅ 半透明黑色背景 */
   padding: 20px;
 }
 .login-card .logo { width: 80px; height: 80px; margin-bottom: 12px; }
