@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh" data-version="v9.7">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>首页</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>首页 · v9.7</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
+  <div class="bg"></div>
   <header class="topbar">
     <div class="title">首页</div>
+    <div class="badge">v9.7</div>
     <button class="mini danger" onclick="logout()">退出</button>
   </header>
-
   <main class="container">
     <section class="panel">
       <h3>钱包状态</h3>
@@ -23,24 +26,36 @@
       <p id="netLine">网络：检测中...</p>
       <p id="sessionLine">会话：检测中...</p>
     </section>
-
-    <!-- ✅ 行情模块 (默认隐藏，由 ENABLE_MARKET 控制) -->
-    <section id="marketBox" style="display:none;">
+    <section class="panel">
       <h3>行情</h3>
-      <div id="priceBox">加载中...</div>
-      <canvas id="kline" height="240"></canvas>
+      <div class="quotes">
+        <div class="quote"><div class="q-title">RONG/USDT</div><div id="priceRongUsdt" class="q-price">--</div></div>
+        <div class="quote"><div class="q-title">RONG/CRC</div><div id="priceRongCrc" class="q-price">--</div></div>
+        <div class="quote"><div class="q-title">CRC/USDT 推导</div><div id="priceCrcUsdt" class="q-price">--</div></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h3>K线</h3>
+      <div class="row">
+        <select id="kInterval" class="input" onchange="switchKInterval(this.value)">
+          <option value="1m">1分钟</option>
+          <option value="5m">5分钟</option>
+          <option value="15m">15分钟</option>
+          <option value="1h">1小时</option>
+          <option value="1d">日线</option>
+        </select>
+        <button class="btn" onclick="resetKline()">重置</button>
+      </div>
+      <canvas id="klineCanvas" height="260"></canvas>
     </section>
   </main>
-
-  <!-- 底部导航 -->
   <nav class="tabbar">
     <a class="tab active" href="home.html">首页</a>
-    <a class="tab" href="home.html#group">拼团</a>
-    <a class="tab" href="home.html#earn">赚币</a>
-    <a class="tab" href="home.html#swap">兑换</a>
+    <a class="tab" href="#">拼团</a>
+    <a class="tab" href="#">赚币</a>
+    <a class="tab" href="#">兑换</a>
     <a class="tab" href="admin.html">我的</a>
   </nav>
-
-  <div id="toastBox"></div>
+  <div id="toastBox" class="toast-top-right"></div>
 </body>
 </html>
