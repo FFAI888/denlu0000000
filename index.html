@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh" data-version="v9.8">
+<html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DApp 登录 · v9.8</title>
+  <title>登录</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="config.js"></script>
@@ -11,18 +11,14 @@
 </head>
 <body>
   <div class="bg"></div>
-  <header class="topbar">
-    <div class="title">登录</div>
-    <div class="badge">v9.8</div>
-  </header>
   <main class="container">
     <div class="login-card">
       <img class="logo" src="tupian/logo.png" alt="logo" />
       <h2>欢迎登录</h2>
-      <p class="sub">仅支持 BSC 主网</p>
+      <p class="sub">请先连接钱包（仅支持 BSC 主网）</p>
       <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
     </div>
   </main>
-  <div id="toastBox" class="toast-top-right"></div>
+  <div id="toastBox"></div>
 </body>
 </html>
