@@ -1,19 +1,52 @@
-/* version: v1.0 */
+/* version: v1.21 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: Arial, sans-serif; background: #f5f5f5; color: #000; }
+html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
+
+/* 背景图片：确保路径正确 ./tupian/bg.jpg */
+.bg {
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  background-image: url("./tupian/bg.jpg");
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+}
+
+/* 版本号浮标 */
+.ver-badge{
+  position: fixed;
+  top:10px; right:10px;
+  background: rgba(0,0,0,0.6);
+  color:#fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  z-index: 9999;
+}
 
 /* 容器 */
 .container { padding: 16px; text-align: center; }
 
-/* 登录卡片 */
+/* 登录卡片（含遮罩与层级） */
 .login-card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
   max-width: 320px;
   margin: 100px auto;
+  background: transparent; /* 由遮罩控制可读性 */
 }
+.card-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 0;                 /* 重要：在内容之下 */
+}
+.card-content {
+  position: relative;
+  z-index: 1;                 /* 重要：在遮罩之上 */
+  padding: 20px;
+}
+.login-card .logo { width: 80px; height: 80px; margin-bottom: 12px; }
 .login-card h2 { margin-bottom: 8px; }
 .login-card p { margin-bottom: 12px; }
 
@@ -21,8 +54,10 @@ html, body { height: 100%; font-family: Arial, sans-serif; background: #f5f5f5; 
 .topbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 16px;
-  background: #eee;
+  background: rgba(0,0,0,0.6);
 }
+.topbar .left { display: flex; align-items: center; gap: 8px; }
+.topbar .logo-small { width: 32px; height: 32px; }
 .topbar .title { font-weight: bold; font-size: 18px; }
 
 /* 按钮 */
@@ -34,4 +69,4 @@ html, body { height: 100%; font-family: Arial, sans-serif; background: #f5f5f5; 
   font-size: 14px;
 }
 .btn-primary { background:#2e8bff; color:#fff; }
-.btn-danger { background:#f44336; color:#fff; }
+.btn-danger  { background:#f44336; color:#fff; }
