@@ -1,42 +1,33 @@
-<!-- version: v1.02 -->
+<!-- version: v1.0 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>登录</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 版本号徽标 -->
-  <div class="ver-badge">v1.02</div>
+  <!-- 版本徽标（由 app.js 写入版本号） -->
+  <div id="verBadge" class="ver-badge">v1.0</div>
 
-  <!-- 基于图片取色的渐变背景层（可锁定为固定主题） -->
-  <div class="bg-color" id="bgColor"></div>
-  <!-- 原有背景图片层（保留） -->
+  <!-- 背景图 -->
   <div class="bg"></div>
-
-  <!-- 新增：主题操作（锁定/解除） -->
-  <div class="theme-ops">
-    <button id="lockThemeBtn" class="mini">🔒 锁定主题色</button>
-    <button id="unlockThemeBtn" class="mini ghost">🔓 解除锁定</button>
-  </div>
 
   <main class="container">
     <div class="login-card">
-      <div class="card-overlay"></div>
-      <div class="card-content">
-        <img class="logo" src="tupian/logo.png" alt="logo" />
-        <h2>欢迎登录</h2>
-        <p>请先连接钱包</p>
-        <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
-        <p id="status">状态：未连接</p>
-      </div>
+      <img class="logo" src="tupian/logo.png" alt="logo" />
+      <h2>欢迎登录</h2>
+      <p class="sub">仅支持 BSC 主网</p>
+
+      <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
+      <p id="status" class="status">状态：未连接</p>
     </div>
   </main>
 
-  <!-- ethers.js 放在 app.js 之前 -->
+  <!-- 脚本顺序：ethers → config → app -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
