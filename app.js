@@ -1,13 +1,34 @@
-// version: v1.02
+// version: v1.0
 
-/*********** 会话：登录/退出 ***********/
-async function connectWallet() {
+/*********** 工具：版本徽标 ***********/
+function setVersionBadge(){
+  const el = document.getElementById("verBadge");
+  if (el && typeof APP_VERSION === "string") el.textContent = APP_VERSION;
+}
+
+/*********** 工具：本地会话 ***********/
+function saveSession(addr, chainId){
+  localStorage.setItem(LS_KEY.SESSION, JSON.stringify({ addr, chainId, ts: Date.now() }));
+}
+function loadSession(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY.SESSION)); } catch(e){ return null; }
+}
+function clearSession(){
+  localStorage.removeItem(LS_KEY.SESSION);
+}
+
+/*********** 核心：连接钱包 ***********/
+async function connectWallet(){
   const status = document.getElementById("status");
+  const say = (t)=>{ if(status) status.textContent = "状态：" + t; };
+
   if (!window.ethereum) {
-    if (status) status.textContent = "状态：请安装钱包（MetaMask/OKX）或用钱包浏览器打开";
+    say("未检测到钱包，请在 MetaMask/OKX 钱包内置浏览器打开");
     return;
   }
+
   try {
+    // 请求账户（优先新 API）
     let accounts = [];
     if (typeof window.ethereum.request === "function") {
       accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -15,151 +36,100 @@ async function connectWallet() {
       const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
       accounts = await provider.send("eth_requestAccounts", []);
     }
-    if (!accounts.length) {
-      if (status) status.textContent = "状态：没有获取到账户";
+    if (!accounts || !accounts.length) { say("未获取到账户"); return; }
+
+    // 读取网络
+    let chainIdHex = "0x0";
+    if (typeof window.ethereum.request === "function") {
+      chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
+    } else {
+      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      const net = await provider.getNetwork();
+      chainIdHex = "0x" + net.chainId.toString(16);
+    }
+
+    if (chainIdHex.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) {
+      say("请切换到 BSC 主网后重试");
       return;
     }
+
     const addr = accounts[0];
-    if (status) status.textContent = "状态：已连接 " + addr;
-    localStorage.setItem("sessionAddr", addr);
+    say("已连接 " + addr.slice(0,6) + "..." + addr.slice(-4));
+
+    saveSession(addr, SUPPORTED_CHAIN_HEX);
     window.location.href = "home.html";
   } catch (err) {
-    if (status) status.textContent = "状态：连接失败 - " + (err.message || err);
+    const msg = err && (err.message || err.reason) ? (err.message || err.reason) : String(err);
+    const code = err && err.code ? ` (code:${err.code})` : "";
+    if (status) status.textContent = "状态：连接失败 - " + msg + code;
   }
 }
 
+/*********** 退出登录 ***********/
 function logout(){
-  localStorage.removeItem("sessionAddr");
+  clearSession();
   window.location.href = "index.html";
 }
 
-/*********** 页面守卫 ***********/
-function guardPages(){
-  const path = window.location.pathname;
-  if(path.endsWith("index.html") || path.endsWith("/")){
-    const btn = document.getElementById("connectBtn");
-    if(btn) btn.onclick = connectWallet;
+/*********** 守卫与事件 ***********/
+function attachProviderGuards(){
+  if (!window.ethereum) return;
+
+  // 账户切换：非当前会话或为空 → 退出
+  window.ethereum.on?.("accountsChanged", (accs)=>{
+    const sess = loadSession();
+    const current = accs && accs[0] ? accs[0].toLowerCase() : "";
+    const valid = sess && sess.addr && sess.addr.toLowerCase() === current;
+    if (!current || !valid) {
+      clearSession();
+      window.location.href = "index.html";
+    }
+  });
+
+  // 网络切换：非 BSC → 退出
+  window.ethereum.on?.("chainChanged", (cid)=>{
+    if (!cid || cid.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) {
+      clearSession();
+      window.location.href = "index.html";
+    }
+  });
+}
+
+function guardLoginPage(){
+  const sess = loadSession();
+  if (sess && sess.addr && sess.chainId?.toLowerCase() === SUPPORTED_CHAIN_HEX.toLowerCase()) {
+    // 已登录直接进首页，防止重复登录
+    window.location.href = "home.html";
+    return;
   }
-  if(path.endsWith("home.html")){
-    const addr = localStorage.getItem("sessionAddr");
-    if(!addr){ window.location.href="index.html"; return; }
-    const el = document.getElementById("addrLine");
-    if(el) el.textContent = "地址：" + addr;
+  // 绑定按钮
+  const btn = document.getElementById("connectBtn");
+  if (btn) btn.onclick = connectWallet;
+}
+
+function guardHomePage(){
+  const sess = loadSession();
+  const addrLine = document.getElementById("addrLine");
+  const netLine  = document.getElementById("netLine");
+  const guardLine= document.getElementById("guardLine");
+
+  if (!sess || !sess.addr || !sess.chainId || sess.chainId.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) {
+    window.location.href = "index.html";
+    return;
   }
+  if (addrLine) addrLine.textContent = "地址：" + sess.addr;
+  if (netLine)  netLine.textContent  = "网络：BSC (56)";
+  if (guardLine)guardLine.textContent= "守卫：已开启（账户/网络变更将强制退出）";
+
+  // 挂事件守卫
+  attachProviderGuards();
 }
 
-/*********** 主题：存取与应用（锁定/解除） ***********/
-const THEME_KEY = "themeColors";
-const THEME_LOCK = "themeLocked";
-
-function applyCssTheme(main, secondary){
-  const root = document.documentElement;
-  if(main)      root.style.setProperty("--theme-main", main);
-  if(secondary) root.style.setProperty("--theme-secondary", secondary);
-  // 同时更新渐变层背景（与 v1.01 兼容保留）
-  const target = document.querySelector("#bgColor");
-  if(target) target.style.background = `linear-gradient(135deg, ${getComputedStyle(root).getPropertyValue("--theme-main").trim()}, ${getComputedStyle(root).getPropertyValue("--theme-secondary").trim()})`;
-}
-
-function saveThemeColors(main, secondary){
-  localStorage.setItem(THEME_KEY, JSON.stringify({ main, secondary }));
-  localStorage.setItem(THEME_LOCK, "1");
-}
-function loadThemeColors(){
-  try { return JSON.parse(localStorage.getItem(THEME_KEY)); } catch(e){ return null; }
-}
-function clearThemeColors(){
-  localStorage.removeItem(THEME_KEY);
-  localStorage.removeItem(THEME_LOCK);
-}
-function isThemeLocked(){ return localStorage.getItem(THEME_LOCK) === "1"; }
-
-/*********** 图片取色 → 渐变 ***********/
-function toHex(c){ return c.toString(16).padStart(2,"0"); }
-function rgbToHex(r,g,b){ return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
-function dist2(a,b){ const dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2]; return dr*dr+dg*dg+db*db; }
-
-function extractPalette(imgEl){
-  const w = 48, h = 48;
-  const cvs = document.createElement("canvas"); cvs.width = w; cvs.height = h;
-  const ctx = cvs.getContext("2d", { willReadFrequently: true });
-  ctx.drawImage(imgEl, 0, 0, w, h);
-  const data = ctx.getImageData(0,0,w,h).data;
-
-  const map = new Map();
-  for(let i=0;i<data.length;i+=4){
-    const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-    if (a < 128) continue;
-    const key = ((r>>4)<<8) | ((g>>4)<<4) | (b>>4);
-    const rec = map.get(key) || {count:0, sum:[0,0,0]};
-    rec.count++; rec.sum[0]+=r; rec.sum[1]+=g; rec.sum[2]+=b;
-    map.set(key, rec);
-  }
-
-  const arr = [];
-  map.forEach((v)=> arr.push({ c:v.count, avg:[(v.sum[0]/v.count)|0,(v.sum[1]/v.count)|0,(v.sum[2]/v.count)|0] }));
-  arr.sort((a,b)=> b.c-a.c);
-  const top = arr.slice(0,10);
-
-  const main = top.length ? top[0].avg : [13,27,42];
-  let sec = [27,38,59], maxD = -1;
-  for(let i=1;i<top.length;i++){
-    const d = dist2(top[i].avg, main);
-    if(d>maxD){ maxD=d; sec=top[i].avg; }
-  }
-  return { main: rgbToHex(main[0],main[1],main[2]),
-           secondary: rgbToHex(sec[0],sec[1],sec[2]) };
-}
-
-function applyGradientFromImage(imgPath){
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.onload = ()=>{
-    const {main, secondary} = extractPalette(img);
-    applyCssTheme(main, secondary);
-    // 若未锁定，仅应用但不保存；锁定时会使用按钮保存
-  };
-  img.onerror = ()=>{
-    // 保持 CSS 默认变量，不抛错
-  };
-  img.src = imgPath;
-}
-
-/*********** 锁定/解除 操作 ***********/
-function lockCurrentTheme(){
-  const styles = getComputedStyle(document.documentElement);
-  const main = styles.getPropertyValue("--theme-main").trim();
-  const secondary = styles.getPropertyValue("--theme-secondary").trim();
-  if(main && secondary){
-    saveThemeColors(main, secondary);
-    // 已锁定即持久化，不做其它改动
-  }
-}
-function unlockTheme(){
-  clearThemeColors();
-  // 解除后重新按图片取色应用
-  applyGradientFromImage("./tupian/bg.jpg");
-}
-
-/*********** 初始化 ***********/
-function bindThemeButtons(){
-  const lockBtn = document.getElementById("lockThemeBtn");
-  if(lockBtn) lockBtn.onclick = lockCurrentTheme;
-  const unlockBtn = document.getElementById("unlockThemeBtn");
-  if(unlockBtn) unlockBtn.onclick = unlockTheme;
-}
-
-function initTheme(){
-  const stored = loadThemeColors();
-  if (isThemeLocked() && stored && stored.main && stored.secondary){
-    applyCssTheme(stored.main, stored.secondary);   // 使用锁定主题
-  } else {
-    applyGradientFromImage("./tupian/bg.jpg");      // 自动取色
-  }
-}
-
+/*********** 启动 ***********/
 window.addEventListener("DOMContentLoaded", ()=>{
-  guardPages();
-  bindThemeButtons();
-  initTheme();
+  setVersionBadge();
+
+  const p = location.pathname;
+  if (p.endsWith("/") || p.endsWith("index.html")) guardLoginPage();
+  if (p.endsWith("home.html")) guardHomePage();
 });
