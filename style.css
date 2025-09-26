@@ -1,9 +1,18 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f9;
+/* 全局设置 */
+html, body {
   margin: 0;
   padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
   text-align: center;
+  max-width: 100%;
+  overflow-x: hidden;  /* 禁止左右滚动条 */
+}
+
+/* 自适应容器 */
+.content, .login-container, .login-card {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 /* 登录页容器 */
@@ -13,18 +22,20 @@ body {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  padding: 0 15px; /* 保证小屏幕不会撑出滚动 */
 }
 
 .login-card {
   background: #fff;
   padding: 30px 20px;
   border-radius: 16px;
-  width: 90%;
+  width: 100%;
   max-width: 400px;
   text-align: center;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
+/* Logo */
 .logo-img {
   width: 80px;
   height: 80px;
@@ -34,14 +45,17 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
+/* 副标题 */
 .subtitle {
   color: #666;
   font-size: 14px;
   margin-bottom: 20px;
 }
 
+/* 按钮 */
 button {
-  width: 90%;
+  width: 100%;
+  max-width: 360px;
   padding: 14px;
   margin: 10px auto;
   border: none;
@@ -56,6 +70,7 @@ button:hover {
   background: #2563eb;
 }
 
+/* 底部版本号 */
 .ver {
   position: fixed;
   bottom: 10px;
@@ -71,11 +86,14 @@ button:hover {
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  max-height: 180px;      /* 最多容纳 3 条提示 */
-  overflow-y: auto;       /* 超出滚动 */
-  scrollbar-width: thin;  /* FireFox */
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  width: calc(100% - 30px);
+  max-width: 400px;
 }
 
+/* 提示框 */
 .toast {
   display: flex;
   align-items: center;
@@ -87,6 +105,8 @@ button:hover {
   font-size: 14px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   animation: slideDown 0.3s ease;
+  word-wrap: break-word;
+  white-space: normal; /* 保证换行，不撑出滚动条 */
 }
 
 .toast.success { background: #16a34a; }
@@ -99,26 +119,14 @@ button:hover {
 
 /* 下滑进入动画 */
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -40px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  from { opacity: 0; transform: translate(-50%, -40px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* 上滑退出动画 */
 @keyframes slideUp {
-  from {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  to {
-    opacity: 0;
-    transform: translate(-50%, -40px);
-  }
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -40px); }
 }
 
 .toast.hide {
