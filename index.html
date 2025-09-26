@@ -2,48 +2,18 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>钱包登录 - v1.71</title>
+  <title>钱包登录 - v1.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="app.js"></script>
 </head>
 <body>
   <div class="content">
     <h2>连接钱包登录</h2>
-    <button onclick="connectWallet()">连接钱包</button>
+    <button onclick="connectWallet()">🔗 连接钱包</button>
     <p id="walletAddress">未连接</p>
   </div>
-  <div class="ver">v1.71</div>
-
-  <script>
-    async function connectWallet(){
-      if(typeof window.ethereum === "undefined"){
-        alert("❌ 未检测到钱包，请安装 MetaMask 或 OKX 钱包");
-        return;
-      }
-      try{
-        // 增加 "any" 参数，提高兼容性
-        const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        const addr = await signer.getAddress();
-
-        if(!ethers.utils.isAddress(addr)){
-          alert("❌ 钱包地址无效，请重试");
-          return;
-        }
-
-        // 存储到本地，首页能取到
-        localStorage.setItem("walletAddress", addr);
-
-        document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
-
-        // 跳转首页
-        window.location.href = "home.html";
-      }catch(e){
-        console.error("连接失败:", e);
-        alert("连接失败: " + e.message);
-      }
-    }
-  </script>
+  <div class="ver">v1.0</div>
 </body>
 </html>
