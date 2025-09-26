@@ -38,8 +38,7 @@
   <div class="ver">v1.1</div>
 
   <script>
-    // 替换为你的合约地址
-    const WHITELIST_ADDR = "0xYourContractAddressHere";
+    const WHITELIST_ADDR = "0xYourContractAddressHere"; // 替换成你的合约地址
     const ABI = [
       "function owner() view returns(address)",
       "function transferOwnership(address) external",
@@ -50,7 +49,7 @@
     let signer, contract;
 
     async function initAdmin(){
-      const addr = getWalletAddress(); // 从 app.js 公共函数获取钱包
+      const addr = getWalletAddress();
       if(!addr){
         document.getElementById("adminStatus").innerText = "❌ 未连接钱包";
         return;
