@@ -2,38 +2,45 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>首页 - v3.5</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>首页</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
+  <header class="topbar">
+    <div class="title">首页</div>
+    <button class="mini danger" onclick="logout()">退出</button>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <h3>钱包状态</h3>
+      <p id="addrLine">地址：检测中...</p>
+      <p id="netLine">网络：检测中...</p>
+      <p id="sessionLine">会话：检测中...</p>
+    </section>
+
+    <!-- ✅ 行情模块 (默认隐藏，由 ENABLE_MARKET 控制) -->
+    <section id="marketBox" style="display:none;">
+      <h3>行情</h3>
+      <div id="priceBox">加载中...</div>
+      <canvas id="kline" height="240"></canvas>
+    </section>
+  </main>
+
+  <!-- 底部导航 -->
+  <nav class="tabbar">
+    <a class="tab active" href="home.html">首页</a>
+    <a class="tab" href="home.html#group">拼团</a>
+    <a class="tab" href="home.html#earn">赚币</a>
+    <a class="tab" href="home.html#swap">兑换</a>
+    <a class="tab" href="admin.html">我的</a>
+  </nav>
+
   <div id="toastBox"></div>
-  <div class="content">
-    <h2>首页</h2>
-    <p id="wallet">检测中...</p>
-    <p id="whitelistStatus">白名单检测中...</p>
-    <p id="adminStatus">管理员检测中...</p>
-  </div>
-  <div class="ver">v3.5</div>
-
-  <script>
-    window.onload = async ()=>{
-      enableRealtimeGuards();
-      checkNetwork();
-      if(window.ethereum){
-        window.ethereum.on("chainChanged", ()=> checkNetwork());
-      }
-
-      const addr = getWalletAddress();
-      document.getElementById("wallet").innerText = addr ? "钱包地址: " + addr : "未登录";
-
-      if(addr){
-        await checkWhitelist(addr, "whitelistStatus");
-        await checkAdmin(addr, "adminStatus");
-      }
-    }
-  </script>
 </body>
 </html>
