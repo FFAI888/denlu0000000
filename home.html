@@ -1,4 +1,4 @@
-<!-- version: v1.0 -->
+<!-- version: v1.01 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -8,7 +8,14 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="bg"></div>
+  <!-- 页面版本号浮标 -->
+  <div class="ver-badge">v1.01</div>
+
+  <!-- ✅ 用 <img> 显示整屏背景 -->
+  <div class="bg">
+    <img class="bg-img" src="tupian/bg.jpg" alt="background" />
+  </div>
+
   <header class="topbar">
     <div class="left">
       <img class="logo-small" src="tupian/logo.png" alt="logo" />
@@ -21,7 +28,6 @@
     <p id="addrLine">地址：未连接</p>
   </main>
 
-  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="app.js"></script>
 </body>
