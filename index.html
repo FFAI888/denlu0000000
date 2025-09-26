@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -12,15 +12,14 @@
     <div class="login-card">
       <img class="logo" src="tupian/logo.png" alt="logo" />
       <h2>欢迎登录</h2>
-      <p class="sub">请先连接钱包（仅支持 BSC 主网）</p>
+      <p class="sub">请先连接钱包</p>
       <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
     </div>
   </main>
-  <div id="toastBox"></div>
+  <p id="status" class="status">状态：未连接</p>
 
-  <!-- 保证加载顺序 -->
+  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
