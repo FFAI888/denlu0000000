@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>登录</title>
+  <title>首页</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="config.js"></script>
@@ -11,13 +11,17 @@
 </head>
 <body>
   <div class="bg"></div>
+  <header class="topbar">
+    <div class="title">首页</div>
+    <button class="mini danger" onclick="logout()">退出</button>
+  </header>
   <main class="container">
-    <div class="login-card">
-      <img class="logo" src="tupian/logo.png" alt="logo" />
-      <h2>欢迎登录</h2>
-      <p class="sub">请先连接钱包（仅支持 BSC 主网）</p>
-      <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
-    </div>
+    <section class="panel">
+      <h3>钱包状态</h3>
+      <p id="addrLine">地址：未连接</p>
+      <p id="netLine">网络：未检测</p>
+      <p id="sessionLine">会话：无</p>
+    </section>
   </main>
   <div id="toastBox"></div>
 </body>
