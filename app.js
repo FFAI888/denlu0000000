@@ -1,10 +1,7 @@
 // 存储和获取钱包地址
-function setWalletAddress(addr){
-  localStorage.setItem("walletAddress", addr);
-}
-function getWalletAddress(){
-  return localStorage.getItem("walletAddress");
-}
+function setWalletAddress(addr){ localStorage.setItem("walletAddress", addr); }
+function getWalletAddress(){ return localStorage.getItem("walletAddress"); }
+function clearWalletAddress(){ localStorage.removeItem("walletAddress"); }
 
 // 连接钱包
 async function connectWallet(){
@@ -14,11 +11,9 @@ async function connectWallet(){
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
       const addr = await signer.getAddress();
-
       setWalletAddress(addr);
       const el = document.getElementById("walletAddress");
       if(el) el.innerText = "✅ 已连接: " + addr;
-
     }catch(e){
       showToast("连接失败: " + e.message, "error");
     }
@@ -29,64 +24,68 @@ async function connectWallet(){
 
 // ---------------- 链检测（BSC 主网） ----------------
 const BSC_CHAIN_ID = "0x38";
-
-async function checkNetwork(){
-  if(!window.ethereum){
-    showToast("未检测到钱包", "warning");
-    return;
-  }
+async function checkNetwork(loginPage=false){
+  if(!window.ethereum){ showToast("未检测到钱包", "warning"); return false; }
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const network = await provider.getNetwork();
   const chainIdHex = "0x" + network.chainId.toString(16);
-
   if(chainIdHex !== BSC_CHAIN_ID){
     showToast("当前不是 BSC 主网，请切换网络！", "error");
+    clearWalletAddress();
+    if(!loginPage){
+      setTimeout(()=>{ window.location.href = "index.html"; }, 1500);
+    }
+    return false;
   }else{
     showToast("已连接到 BSC 主网", "success");
+    return true;
   }
+}
+
+// ---------------- 实时检测（防绕过 + 钱包切换） ----------------
+function enableRealtimeGuards(){
+  if(!window.ethereum) return;
+  const cachedAddr = getWalletAddress();
+  if(!cachedAddr){
+    showToast("未登录，请重新连接钱包", "error");
+    setTimeout(()=>{ window.location.href = "index.html"; }, 1200);
+    return;
+  }
+  window.ethereum.on("accountsChanged", async (accounts)=>{
+    if(accounts.length === 0){
+      showToast("钱包已断开，请重新登录", "error");
+      clearWalletAddress();
+      setTimeout(()=>{ window.location.href = "index.html"; }, 1200);
+    }else{
+      const newAddr = accounts[0];
+      if(newAddr.toLowerCase() !== cachedAddr.toLowerCase()){
+        showToast("检测到钱包切换，请重新登录", "error");
+        clearWalletAddress();
+        setTimeout(()=>{ window.location.href = "index.html"; }, 1200);
+      }
+    }
+  });
 }
 
 // ---------------- 弹窗提示（队列机制） ----------------
-let toastQueue = [];
-let toastActive = false;
-
+let toastQueue = [], toastActive = false;
 function showToast(msg, type){
   toastQueue.push({ msg, type });
-  if(!toastActive){
-    displayNextToast();
-  }
+  if(!toastActive){ displayNextToast(); }
 }
-
 function displayNextToast(){
-  if(toastQueue.length === 0){
-    toastActive = false;
-    return;
-  }
-
+  if(toastQueue.length === 0){ toastActive = false; return; }
   toastActive = true;
   const { msg, type } = toastQueue.shift();
-
-  const box = document.getElementById("toastBox");
-  if(!box) return;
-
+  const box = document.getElementById("toastBox"); if(!box) return;
   const div = document.createElement("div");
   div.className = "toast " + type;
-
-  let icon = "";
-  if(type === "success") icon = "✅";
-  if(type === "error")   icon = "❌";
-  if(type === "warning") icon = "⚠️";
-
+  let icon = ""; if(type==="success") icon="✅"; if(type==="error") icon="❌"; if(type==="warning") icon="⚠️";
   div.innerHTML = `<span class="icon">${icon}</span><span>${msg}</span>`;
   box.appendChild(div);
-
-  // 显示3秒后退出动画
   setTimeout(()=>{
     div.classList.add("hide");
-    setTimeout(()=>{
-      div.remove();
-      displayNextToast(); // 播放下一个提示
-    }, 300);
+    setTimeout(()=>{ div.remove(); displayNextToast(); }, 300);
   }, 3000);
 }
 
@@ -96,7 +95,6 @@ const ABI = [
   "function isWhitelisted(address) view returns (bool)",
   "function owner() view returns (address)"
 ];
-
 async function checkWhitelist(addr, elementId){
   try{
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -108,16 +106,13 @@ async function checkWhitelist(addr, elementId){
     document.getElementById(elementId).innerText = "检测失败";
   }
 }
-
 async function checkAdmin(addr, elementId){
   try{
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
     const owner = await contract.owner();
     document.getElementById(elementId).innerText =
-      addr.toLowerCase() === owner.toLowerCase()
-      ? "✅ 你是管理员"
-      : "❌ 你不是管理员";
+      addr.toLowerCase() === owner.toLowerCase() ? "✅ 你是管理员" : "❌ 你不是管理员";
   }catch(e){
     console.error("管理员检测失败:", e);
     document.getElementById(elementId).innerText = "检测失败";
