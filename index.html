@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>钱包登录 - v1.8</title>
+  <title>钱包登录 - v1.9</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -11,15 +11,15 @@
 <body>
   <div class="login-container">
     <div class="login-card">
-      <!-- LOGO 图片 -->
-      <img src="logo.png" alt="Logo" class="logo-img">
+      <!-- ✅ LOGO 图片现在从 tupian 文件夹里加载 -->
+      <img src="tupian/logo.png" alt="Logo" class="logo-img">
       <h2>RongChain DApp</h2>
       <p class="subtitle">请连接钱包以继续</p>
       <button onclick="connectAndRedirect()">连接钱包</button>
       <p id="walletAddress">未连接</p>
     </div>
   </div>
-  <div class="ver">v1.8</div>
+  <div class="ver">v1.9</div>
 
   <script>
     async function connectAndRedirect(){
