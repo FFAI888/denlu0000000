@@ -1,0 +1,41 @@
+<!-- version: v1.02 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>拼团</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="verBadge" class="ver-badge">v1.02</div>
+  <div class="bg"></div>
+
+  <header class="topbar">
+    <div class="left">
+      <img class="logo-small" src="tupian/logo.png" alt="logo" />
+      <span class="title">拼团</span>
+    </div>
+    <button class="btn-danger" onclick="logout()">退出</button>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <h3>拼团（占位页）</h3>
+      <p id="addrGroup">当前地址：检测中…</p>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <a href="home.html"  data-tab="home">🏠 首页</a>
+    <a href="group.html" data-tab="group">👥 拼团</a>
+    <a href="earn.html"  data-tab="earn">💰 赚币</a>
+    <a href="swap.html"  data-tab="swap">🔄 兑换</a>
+    <a href="mine.html"  data-tab="mine">👤 我的</a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
