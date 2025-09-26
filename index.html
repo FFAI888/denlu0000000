@@ -2,16 +2,18 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>钱包登录 - v1.9</title>
+  <title>钱包登录 - v2.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </head>
 <body>
+  <!-- ✅ 提示容器（自动显示/隐藏） -->
+  <div id="toastBox"></div>
+
   <div class="login-container">
     <div class="login-card">
-      <!-- ✅ LOGO 图片现在从 tupian 文件夹里加载 -->
       <img src="tupian/logo.png" alt="Logo" class="logo-img">
       <h2>RongChain DApp</h2>
       <p class="subtitle">请连接钱包以继续</p>
@@ -19,7 +21,7 @@
       <p id="walletAddress">未连接</p>
     </div>
   </div>
-  <div class="ver">v1.9</div>
+  <div class="ver">v2.0</div>
 
   <script>
     async function connectAndRedirect(){
@@ -27,7 +29,15 @@
       const addr = getWalletAddress();
       if(addr){
         document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
-        window.location.href = "home.html"; // 自动跳首页
+        window.location.href = "home.html";
+      }
+    }
+
+    // 页面加载时自动检测链
+    window.onload = ()=>{
+      checkNetwork();
+      if(window.ethereum){
+        window.ethereum.on("chainChanged", ()=> checkNetwork()); // 监听链切换
       }
     }
   </script>
