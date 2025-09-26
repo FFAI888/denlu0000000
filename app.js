@@ -19,10 +19,6 @@ async function connectWallet(){
       const el = document.getElementById("walletAddress");
       if(el) el.innerText = "✅ 已连接: " + addr;
 
-      // 自动跳转首页
-      if(window.location.pathname.includes("index.html")){
-        window.location.href = "home.html";
-      }
     }catch(e){
       alert("连接失败: " + e.message);
     }
@@ -31,8 +27,8 @@ async function connectWallet(){
   }
 }
 
-// ---------------- 白名单检测 ----------------
-const WHITELIST_ADDR = "0xYourContractAddressHere"; // 替换为实际合约地址
+// ---------------- 白名单 & 管理员检测 ----------------
+const WHITELIST_ADDR = "0xYourContractAddressHere"; // 替换为合约地址
 const ABI = [
   "function isWhitelisted(address) view returns (bool)",
   "function owner() view returns (address)"
@@ -50,7 +46,6 @@ async function checkWhitelist(addr, elementId){
   }
 }
 
-// ---------------- 管理员检测 ----------------
 async function checkAdmin(addr, elementId){
   try{
     const provider = new ethers.providers.Web3Provider(window.ethereum);
