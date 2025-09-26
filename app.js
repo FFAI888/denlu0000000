@@ -4,7 +4,7 @@ async function connectWallet() {
   const status = document.getElementById("status");
 
   if (!window.ethereum) {
-    status.textContent = "状态：请安装钱包（MetaMask/OKX）或用钱包内置浏览器打开";
+    status.textContent = "状态：请安装钱包（MetaMask/OKX）或用钱包浏览器打开";
     return;
   }
 
