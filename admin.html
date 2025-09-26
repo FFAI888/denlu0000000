@@ -2,13 +2,16 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理后台 - v1.1</title>
+  <title>管理后台 - v2.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </head>
 <body>
+  <!-- 提示容器 -->
+  <div id="toastBox"></div>
+
   <div class="content">
     <h2>Whitelist 管理后台</h2>
     <p id="adminStatus">检测中...</p>
@@ -35,10 +38,10 @@
     </div>
   </div>
 
-  <div class="ver">v1.1</div>
+  <div class="ver">v2.0</div>
 
   <script>
-    const WHITELIST_ADDR = "0xYourContractAddressHere"; // 替换成你的合约地址
+    const WHITELIST_ADDR = "0xYourContractAddressHere";
     const ABI = [
       "function owner() view returns(address)",
       "function transferOwnership(address) external",
@@ -49,6 +52,11 @@
     let signer, contract;
 
     async function initAdmin(){
+      checkNetwork();
+      if(window.ethereum){
+        window.ethereum.on("chainChanged", ()=> checkNetwork());
+      }
+
       const addr = getWalletAddress();
       if(!addr){
         document.getElementById("adminStatus").innerText = "❌ 未连接钱包";
