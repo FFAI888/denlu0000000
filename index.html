@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>钱包登录 - v1.4</title>
+  <title>钱包登录 - v1.6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -11,28 +11,20 @@
 <body>
   <div class="content">
     <h2>连接钱包登录</h2>
-    <button onclick="connectAndCheck()">🔗 连接钱包</button>
+    <button onclick="connectAndRedirect()">🔗 连接钱包</button>
     <p id="walletAddress">未连接</p>
-    <p id="whitelistStatus">白名单状态: --</p>
-    <p id="adminStatus">管理员状态: --</p>
-    <button id="enterHome" style="display:none;" onclick="goHome()">进入首页</button>
   </div>
-  <div class="ver">v1.4</div>
+  <div class="ver">v1.6</div>
 
   <script>
-    async function connectAndCheck(){
-      await connectWallet(); // 调用 app.js 的公共方法
+    async function connectAndRedirect(){
+      await connectWallet(); // 调用公共函数 app.js
       const addr = getWalletAddress();
       if(addr){
-        document.getElementById("walletAddress").innerText = "钱包地址: " + addr;
-        await checkWhitelist(addr, "whitelistStatus");
-        await checkAdmin(addr, "adminStatus");
-        document.getElementById("enterHome").style.display = "block";
+        document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
+        // 自动跳转首页
+        window.location.href = "home.html";
       }
-    }
-
-    function goHome(){
-      window.location.href = "home.html";
     }
   </script>
 </body>
