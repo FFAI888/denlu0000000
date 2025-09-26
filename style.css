@@ -1,16 +1,22 @@
-/* version: v1.01 */
+/* version: v1.02 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
 
-/* ✅ 新增：提色后的渐变背景层（在最底层） */
+/* 主题色变量（可被 JS 动态覆盖或锁定） */
+:root{
+  --theme-main: #0d1b2a;      /* 初始主色（会被 JS 更新） */
+  --theme-secondary: #1b263b; /* 初始次色（会被 JS 更新） */
+}
+
+/* 基于主题色变量的渐变背景（在图片层下方） */
 .bg-color{
   position: fixed; top:0; left:0;
   width:100%; height:100%;
-  background: linear-gradient(135deg,#0d1b2a,#1b263b); /* 初始默认，加载后由 JS 动态覆盖 */
+  background: linear-gradient(135deg, var(--theme-main), var(--theme-secondary));
   z-index: -2;
 }
 
-/* 原有：背景图片层（在渐变之上，用于保留你的图片效果） */
+/* 背景图片层（保留你的图片效果） */
 .bg {
   position: fixed; top:0; left:0;
   width:100%; height:100%;
@@ -28,10 +34,25 @@ html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
   font-size: 12px; z-index: 9999;
 }
 
+/* 主题操作按钮（浮动） */
+.theme-ops{
+  position: fixed; top:10px; left:10px;
+  display: flex; gap: 8px; z-index: 9999;
+}
+.mini{
+  padding: 6px 10px; border-radius: 6px; border: none;
+  background: rgba(255,255,255,0.2); color:#fff; backdrop-filter: blur(6px);
+  font-size: 12px; cursor: pointer;
+}
+.mini.ghost{
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
 /* 容器 */
 .container { padding: 16px; text-align: center; }
 
-/* 登录卡片（含遮罩与层级） */
+/* 登录卡片 */
 .login-card {
   position: relative;
   border-radius: 10px;
@@ -39,8 +60,8 @@ html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
   max-width: 320px;
   margin: 100px auto;
 }
-.card-overlay { position: absolute; inset:0; background: rgba(0,0,0,0.6); z-index:0; }
-.card-content  { position: relative; z-index:1; padding: 20px; }
+.card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 0; }
+.card-content  { position: relative; z-index: 1; padding: 20px; }
 .login-card .logo { width: 80px; height: 80px; margin-bottom: 12px; }
 .login-card h2 { margin-bottom: 8px; }
 .login-card p { margin-bottom: 12px; }
@@ -56,4 +77,8 @@ html, body { height: 100%; font-family: Arial, sans-serif; color: #fff; }
 
 /* 按钮 */
 .btn-primary, .btn-danger {
-  padding: 10px 16px; border-radius: 
+  padding: 10px 16px; border-radius: 6px; border: none;
+  cursor: pointer; font-size: 14px;
+}
+.btn-primary { background:#2e8bff; color:#fff; }
+.btn-danger  { background:#f44336; color:#fff; }
