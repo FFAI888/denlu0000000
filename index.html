@@ -1,25 +1,22 @@
-<!-- version: v1.02 -->
+<!-- version: v1.01 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 版本号浮标 -->
-  <div class="ver-badge">v1.02</div>
+  <!-- 版本号徽标 -->
+  <div class="ver-badge">v1.01</div>
 
-  <!-- 保留：背景层（不删除）。实际不使用背景图，默认隐藏由 CSS 控制 -->
+  <!-- ✅ 新增：基于图片颜色的渐变背景层 -->
+  <div class="bg-color" id="bgColor"></div>
+  <!-- 原有：背景图片层（保留，不删除） -->
   <div class="bg"></div>
 
   <main class="container">
-    <!-- 直接显示你的图片（不再依赖 CSS 背景） -->
-    <div class="image-wrap">
-      <img src="tupian/bg.jpg" alt="展示图">
-    </div>
-
     <div class="login-card">
       <div class="card-overlay"></div>
       <div class="card-content">
@@ -32,7 +29,7 @@
     </div>
   </main>
 
-  <!-- ethers.js 放在 app.js 之前 -->
+  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="app.js"></script>
 </body>
