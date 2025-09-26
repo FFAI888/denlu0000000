@@ -9,7 +9,7 @@
   <script src="app.js"></script>
 </head>
 <body>
-  <!-- ✅ 提示容器（自动显示/隐藏） -->
+  <!-- 提示容器 -->
   <div id="toastBox"></div>
 
   <div class="login-container">
@@ -25,7 +25,7 @@
 
   <script>
     async function connectAndRedirect(){
-      await connectWallet(); // 公共函数
+      await connectWallet();
       const addr = getWalletAddress();
       if(addr){
         document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
@@ -33,11 +33,10 @@
       }
     }
 
-    // 页面加载时自动检测链
     window.onload = ()=>{
       checkNetwork();
       if(window.ethereum){
-        window.ethereum.on("chainChanged", ()=> checkNetwork()); // 监听链切换
+        window.ethereum.on("chainChanged", ()=> checkNetwork());
       }
     }
   </script>
