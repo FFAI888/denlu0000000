@@ -2,28 +2,32 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>钱包登录 - v1.6</title>
+  <title>钱包登录 - v1.8</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </head>
 <body>
-  <div class="content">
-    <h2>连接钱包登录</h2>
-    <button onclick="connectAndRedirect()">🔗 连接钱包</button>
-    <p id="walletAddress">未连接</p>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- LOGO 图片 -->
+      <img src="logo.png" alt="Logo" class="logo-img">
+      <h2>RongChain DApp</h2>
+      <p class="subtitle">请连接钱包以继续</p>
+      <button onclick="connectAndRedirect()">连接钱包</button>
+      <p id="walletAddress">未连接</p>
+    </div>
   </div>
-  <div class="ver">v1.6</div>
+  <div class="ver">v1.8</div>
 
   <script>
     async function connectAndRedirect(){
-      await connectWallet(); // 调用公共函数 app.js
+      await connectWallet(); // 公共函数
       const addr = getWalletAddress();
       if(addr){
         document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
-        // 自动跳转首页
-        window.location.href = "home.html";
+        window.location.href = "home.html"; // 自动跳首页
       }
     }
   </script>
