@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>首页 - v1.0</title>
+  <title>首页 - v1.3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -12,13 +12,20 @@
   <div class="content">
     <h2>首页</h2>
     <p id="wallet">检测中...</p>
+    <p id="whitelistStatus">白名单检测中...</p>
+    <p id="adminStatus">管理员检测中...</p>
   </div>
-  <div class="ver">v1.0</div>
+  <div class="ver">v1.3</div>
 
   <script>
-    window.onload = ()=>{
+    window.onload = async ()=>{
       const addr = getWalletAddress();
       document.getElementById("wallet").innerText = addr ? "钱包地址: " + addr : "未登录";
+
+      if(addr){
+        await checkWhitelist(addr, "whitelistStatus");
+        await checkAdmin(addr, "adminStatus");
+      }
     }
   </script>
 </body>
