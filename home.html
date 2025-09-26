@@ -1,4 +1,4 @@
-<!-- version: v1.0 -->
+<!-- version: v1.02 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.0</div>
+  <div id="verBadge" class="ver-badge">v1.02</div>
   <div class="bg"></div>
 
   <header class="topbar">
@@ -27,6 +27,15 @@
       <p id="guardLine">守卫：未生效</p>
     </section>
   </main>
+
+  <!-- 底部导航栏 -->
+  <nav class="tabbar">
+    <a href="home.html" data-tab="home">🏠 首页</a>
+    <a href="group.html" data-tab="group">👥 拼团</a>
+    <a href="earn.html"  data-tab="earn">💰 赚币</a>
+    <a href="swap.html"  data-tab="swap">🔄 兑换</a>
+    <a href="mine.html"  data-tab="mine">👤 我的</a>
+  </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="config.js"></script>
