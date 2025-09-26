@@ -1,26 +1,15 @@
-<!-- version: v1.02 -->
+<!-- version: v1.0 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>首页</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 版本号徽标 -->
-  <div class="ver-badge">v1.02</div>
-
-  <!-- 基于图片取色的渐变背景层（可锁定为固定主题） -->
-  <div class="bg-color" id="bgColor"></div>
-  <!-- 原有背景图片层（保留） -->
+  <div id="verBadge" class="ver-badge">v1.0</div>
   <div class="bg"></div>
-
-  <!-- 新增：主题操作（锁定/解除） -->
-  <div class="theme-ops">
-    <button id="lockThemeBtn" class="mini">🔒 锁定主题色</button>
-    <button id="unlockThemeBtn" class="mini ghost">🔓 解除锁定</button>
-  </div>
 
   <header class="topbar">
     <div class="left">
@@ -29,12 +18,18 @@
     </div>
     <button class="btn-danger" onclick="logout()">退出</button>
   </header>
+
   <main class="container">
-    <h3>钱包状态</h3>
-    <p id="addrLine">地址：未连接</p>
+    <section class="panel">
+      <h3>钱包状态</h3>
+      <p id="addrLine">地址：未连接</p>
+      <p id="netLine">网络：未检测</p>
+      <p id="guardLine">守卫：未生效</p>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
