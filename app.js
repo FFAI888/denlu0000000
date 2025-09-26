@@ -27,8 +27,8 @@ async function connectWallet(){
   }
 }
 
-// ---------------- 链检测（只支持 BSC 主网） ----------------
-const BSC_CHAIN_ID = "0x38"; // BSC 主网 Chain ID
+// ---------------- 链检测（BSC 主网） ----------------
+const BSC_CHAIN_ID = "0x38";
 
 async function checkNetwork(){
   if(!window.ethereum){
@@ -49,7 +49,7 @@ async function checkNetwork(){
 // ---------------- 弹窗提示 ----------------
 let toastDelay = false;
 function showToast(msg, type){
-  if(toastDelay) return; // 延迟1秒避免重叠
+  if(toastDelay) return;
   toastDelay = true;
   setTimeout(()=> toastDelay=false, 1000);
 
@@ -61,8 +61,39 @@ function showToast(msg, type){
   div.innerText = msg;
   box.appendChild(div);
 
-  // 3秒后自动消失
-  setTimeout(()=>{
-    div.remove();
-  }, 3000);
+  setTimeout(()=> div.remove(), 3000);
+}
+
+// ---------------- 白名单 & 管理员检测 ----------------
+const WHITELIST_ADDR = "0xYourContractAddressHere";
+const ABI = [
+  "function isWhitelisted(address) view returns (bool)",
+  "function owner() view returns (address)"
+];
+
+async function checkWhitelist(addr, elementId){
+  try{
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
+    const status = await contract.isWhitelisted(addr);
+    document.getElementById(elementId).innerText = status ? "✅ 已在白名单" : "❌ 不在白名单";
+  }catch(e){
+    console.error("白名单检测失败:", e);
+    document.getElementById(elementId).innerText = "检测失败";
+  }
+}
+
+async function checkAdmin(addr, elementId){
+  try{
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
+    const owner = await contract.owner();
+    document.getElementById(elementId).innerText =
+      addr.toLowerCase() === owner.toLowerCase()
+      ? "✅ 你是管理员"
+      : "❌ 你不是管理员";
+  }catch(e){
+    console.error("管理员检测失败:", e);
+    document.getElementById(elementId).innerText = "检测失败";
+  }
 }
