@@ -1,4 +1,4 @@
-// version: v1.01
+// version: v1.02
 
 async function connectWallet() {
   const status = document.getElementById("status");
