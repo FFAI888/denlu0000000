@@ -1,9 +1,11 @@
-// ✅ 全局配置 (v7.1)
-const SESSION_TIMEOUT = 30 * 60 * 1000;
-const SUPPORTED_CHAIN_HEX = "0x38"; // BSC
+// v9.8 config.js
+
+const SESSION_TIMEOUT = 30 * 60 * 1000; 
+const SUPPORTED_CHAIN_HEX = "0x38";
 const SUPPORTED_CHAIN_DEC = 56;
 
-const WHITELIST_ADDR = "0xYourContractAddressHere"; // ← 替换为你的合约地址
+const WHITELIST_ADDR = "0x8b32872842C76DA95aeB25d27dE2F16fa1979bE5";
+
 const ABI = [
   "function isWhitelisted(address) view returns (bool)",
   "function owner() view returns (address)",
@@ -12,32 +14,35 @@ const ABI = [
   "function getWhitelist() view returns(address[])"
 ];
 
-// ✅ 行情开关
-const ENABLE_MARKET = false;  // 默认关闭，改 true 即启用
-const MARKET_PAIRS = {
-  RONG_USDT: { base:"0x0337...", quote:"0x55d398326f99059f..." },
-  CRC_RONG:  { base:"0x5b2f...", quote:"0x0337..." }
+const TOKENS = {
+  RONG: "0x0337a015467af6605c4262d9f02a3dcd8b576f7e",
+  USDT: "0x55d398326f99059ff775485246999027b3197955",
+  CRC:  "0x5b2fe2b06e714b7bea4fd35b428077d850c48087"
 };
 
-// ✅ Toast 配置（保持完整）
-const toastPosition   = "top-right";
-const toastDuration   = 3000;
-const toastMax        = 3;
-const toastAnimation  = "slide";
-const toastTheme      = "dark";
-const toastVibrate    = true;
-const toastQueueMode  = "stack";
-const toastOrder      = "oldest-first";
-const toastAlign      = "left";
-const toastWidth      = "auto";
-const toastBorder     = "none";
-const toastShadow     = "0 4px 6px rgba(0,0,0,0.2)";
-const toastRadius     = "12px";
-const toastBackground = "";
-
-const toastIcon = { success: "✅", error: "❌", warning: "⚠️" };
-const toastSound = {
-  success: "sounds/success.mp3",
-  error: "sounds/error.mp3",
-  warning: "sounds/warning.mp3"
+const PAIRS = {
+  RONG_USDT: "0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795",
+  RONG_CRC:  "0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5"
 };
+
+const PRICE_REFRESH_MS = 1000;
+const STATE_REFRESH_MS = 5000;
+
+const KLINE_SUPPORTED = ["1m","1h","1d"];
+const KLINE_DEFAULT_INTERVAL = "1m";
+
+const PAIR_ABI = [
+  "function getReserves() view returns (uint112,uint112,uint32)",
+  "function token0() view returns (address)",
+  "function token1() view returns (address)"
+];
+
+const ERC20_ABI = [
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)"
+];
+
+// GraphQL 端点
+const PANCAKE_GQL = "https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2";
+
+const toastDuration = 3000;
