@@ -23,18 +23,39 @@ function clearSession(){
 
 // 登录
 async function connectWallet(){
-  if(!window.ethereum){ showToast("请安装钱包","error"); return; }
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const net = await provider.getNetwork();
-  if(net.chainId !== SUPPORTED_CHAIN_DEC){
-    showToast("请切换到BSC主网","error"); return;
+  console.log("🔍 connectWallet() 被调用"); // 调试日志
+  try {
+    if(!window.ethereum){ 
+      showToast("请安装钱包","error"); 
+      return; 
+    }
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    // 请求账户
+    const accounts = await provider.send("eth_requestAccounts",[]);
+    console.log("获取到账户:", accounts);
+    if(!accounts || accounts.length === 0){
+      showToast("未检测到账户","error"); return;
+    }
+
+    // 检查网络
+    const net = await provider.getNetwork();
+    console.log("当前网络:", net);
+    if(net.chainId !== SUPPORTED_CHAIN_DEC){
+      showToast("请切换到BSC主网","error"); return;
+    }
+
+    const addr = accounts[0];
+    saveSession(addr);
+    showToast("连接成功","success");
+    window.location.href="home.html";
+  } catch(e) {
+    console.error("连接失败:", e);
+    showToast("连接失败: " + (e.message || e),"error");
   }
-  const accounts = await provider.send("eth_requestAccounts",[]);
-  const addr = accounts[0];
-  saveSession(addr);
-  showToast("连接成功","success");
-  window.location.href="home.html";
 }
+
 async function logout(){
   clearSession();
   showToast("已退出");
@@ -45,8 +66,6 @@ async function logout(){
 async function guardLogin(){
   const s = loadSession();
   if(s) window.location.href="home.html";
-  const btn = document.getElementById("connectBtn");
-  if(btn) btn.onclick = connectWallet;
 }
 async function guardHome(){
   const s = loadSession();
@@ -58,7 +77,19 @@ async function guardHome(){
 
 // 初始化
 window.addEventListener("DOMContentLoaded", ()=>{
+  console.log("页面已加载:", window.location.pathname);
   const path = window.location.pathname;
-  if(path.endsWith("/") || path.endsWith("index.html")) guardLogin();
+
+  if(path.endsWith("/") || path.endsWith("index.html")){
+    guardLogin();
+    const btn = document.getElementById("connectBtn");
+    if(btn) {
+      console.log("绑定按钮事件成功");
+      btn.onclick = connectWallet;
+    } else {
+      console.log("❌ 没找到按钮 connectBtn");
+    }
+  }
+
   if(path.endsWith("home.html")) guardHome();
 });
