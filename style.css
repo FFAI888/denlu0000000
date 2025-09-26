@@ -6,10 +6,10 @@ html, body {
   background: #f4f6f9;
   text-align: center;
   max-width: 100%;
-  overflow-x: hidden;  /* 禁止左右滚动条 */
+  overflow-x: hidden;
 }
 
-/* 自适应容器 */
+/* 容器 */
 .content, .login-container, .login-card {
   box-sizing: border-box;
   max-width: 100%;
@@ -22,7 +22,7 @@ html, body {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #3b82f6, #06b6d4);
-  padding: 0 15px; /* 保证小屏幕不会撑出滚动 */
+  padding: 0 15px;
 }
 
 .login-card {
@@ -64,10 +64,23 @@ button {
   background: #3b82f6;
   color: #fff;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 button:hover {
   background: #2563eb;
+}
+
+/* 输入框 */
+input {
+  width: 100%;
+  max-width: 360px;
+  padding: 12px;
+  margin: 10px auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
 }
 
 /* 底部版本号 */
@@ -79,7 +92,7 @@ button:hover {
   color: #999;
 }
 
-/* 顶部提示容器 */
+/* 提示容器 */
 #toastBox {
   position: fixed;
   top: 10px;
@@ -106,7 +119,7 @@ button:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   animation: slideDown 0.3s ease;
   word-wrap: break-word;
-  white-space: normal; /* 保证换行，不撑出滚动条 */
+  white-space: normal;
 }
 
 .toast.success { background: #16a34a; }
@@ -117,13 +130,12 @@ button:hover {
   font-size: 16px;
 }
 
-/* 下滑进入动画 */
+/* 动画 */
 @keyframes slideDown {
   from { opacity: 0; transform: translate(-50%, -40px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* 上滑退出动画 */
 @keyframes slideUp {
   from { opacity: 1; transform: translate(-50%, 0); }
   to { opacity: 0; transform: translate(-50%, -40px); }
@@ -131,4 +143,37 @@ button:hover {
 
 .toast.hide {
   animation: slideUp 0.3s ease forwards;
+}
+
+/* ✅ 响应式：小屏幕优化 */
+@media (max-width: 400px) {
+  body {
+    font-size: 14px;
+  }
+
+  .login-card {
+    padding: 20px 15px;
+    border-radius: 12px;
+  }
+
+  .logo-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  input {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .toast {
+    font-size: 12px;
+    padding: 8px 15px;
+  }
 }
