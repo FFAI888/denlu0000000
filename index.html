@@ -1,24 +1,28 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh" data-version="v9.7">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>DApp 登录</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DApp 登录 · v9.7</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <div class="bg"></div>
-
-  <div class="login-card">
-    <img class="logo" src="tupian/logo.png" alt="logo" />
-    <h2>欢迎登录</h2>
-    <p class="sub">仅支持 BSC 主网，需连接钱包后进入</p>
-    <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
-  </div>
-
-  <div id="toastBox"></div>
+  <header class="topbar">
+    <div class="title">登录</div>
+    <div class="badge">v9.7</div>
+  </header>
+  <main class="container">
+    <div class="login-card">
+      <img class="logo" src="tupian/logo.png" alt="logo" />
+      <h2>欢迎登录</h2>
+      <p class="sub">仅支持 BSC 主网</p>
+      <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
+    </div>
+  </main>
+  <div id="toastBox" class="toast-top-right"></div>
 </body>
 </html>
