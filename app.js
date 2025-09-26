@@ -19,7 +19,7 @@ async function connectWallet(){
       const el = document.getElementById("walletAddress");
       if(el) el.innerText = "✅ 已连接: " + addr;
 
-      // 自动跳转首页（只有在 index.html 调用时才生效）
+      // 自动跳转首页
       if(window.location.pathname.includes("index.html")){
         window.location.href = "home.html";
       }
@@ -28,5 +28,40 @@ async function connectWallet(){
     }
   }else{
     alert("请安装 MetaMask 或支持 Web3 的钱包");
+  }
+}
+
+// ---------------- 白名单检测 ----------------
+const WHITELIST_ADDR = "0xYourContractAddressHere"; // 替换为实际合约地址
+const ABI = [
+  "function isWhitelisted(address) view returns (bool)",
+  "function owner() view returns (address)"
+];
+
+async function checkWhitelist(addr, elementId){
+  try{
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
+    const status = await contract.isWhitelisted(addr);
+    document.getElementById(elementId).innerText = status ? "✅ 已在白名单" : "❌ 不在白名单";
+  }catch(e){
+    console.error("白名单检测失败:", e);
+    document.getElementById(elementId).innerText = "检测失败";
+  }
+}
+
+// ---------------- 管理员检测 ----------------
+async function checkAdmin(addr, elementId){
+  try{
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
+    const owner = await contract.owner();
+    document.getElementById(elementId).innerText =
+      addr.toLowerCase() === owner.toLowerCase()
+      ? "✅ 你是管理员"
+      : "❌ 你不是管理员";
+  }catch(e){
+    console.error("管理员检测失败:", e);
+    document.getElementById(elementId).innerText = "检测失败";
   }
 }
