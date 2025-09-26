@@ -1,40 +1,24 @@
+<!-- version: v1.0 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>连接钱包测试</title>
+  <title>登录</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>连接钱包测试</h2>
-  <button id="connectBtn">🔗 连接钱包</button>
-  <p id="status">状态：未连接</p>
+  <main class="container">
+    <div class="login-card">
+      <h2>欢迎登录</h2>
+      <p>请先连接钱包</p>
+      <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
+      <p id="status">状态：未连接</p>
+    </div>
+  </main>
 
+  <!-- ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script>
-    async function connectWallet() {
-      const status = document.getElementById("status");
-
-      if (!window.ethereum) {
-        status.textContent = "状态：未检测到钱包，请用 MetaMask 或 OKX 钱包自带浏览器打开";
-        return;
-      }
-
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-        const accounts = await provider.send("eth_requestAccounts", []);
-        if (!accounts.length) {
-          status.textContent = "状态：没有获取到账户";
-          return;
-        }
-        const addr = accounts[0];
-        status.textContent = "状态：已连接 " + addr;
-      } catch (err) {
-        status.textContent = "状态：连接失败 - " + (err.message || err);
-      }
-    }
-
-    document.getElementById("connectBtn").onclick = connectWallet;
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
