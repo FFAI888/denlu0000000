@@ -2,23 +2,23 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>DApp 登录</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-  <!-- 背景 -->
   <div class="bg"></div>
 
-  <!-- 登录卡片 -->
   <div class="login-card">
+    <img class="logo" src="tupian/logo.png" alt="logo" />
     <h2>欢迎登录</h2>
-    <button id="connectBtn">🔗 连接钱包</button>
+    <p class="sub">仅支持 BSC 主网，需连接钱包后进入</p>
+    <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
   </div>
 
-  <!-- 提示框容器 -->
   <div id="toastBox"></div>
 </body>
 </html>
