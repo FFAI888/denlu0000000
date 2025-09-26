@@ -1,4 +1,3 @@
-/* 全局样式 */
 body {
   font-family: Arial, sans-serif;
   background: #f4f6f9;
@@ -7,31 +6,17 @@ body {
   text-align: center;
 }
 
-.ver {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 12px;
-  color: #999;
-}
-
-.topver {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 12px;
-  color: #666;
-}
-
 .content {
-  padding: 20px;
+  margin-top: 30%;
 }
 
 button {
-  padding: 10px 16px;
-  margin: 5px;
+  width: 80%;
+  padding: 14px;
+  margin: 10px auto;
   border: none;
-  border-radius: 4px;
+  border-radius: 10px;
+  font-size: 16px;
   background: #3b82f6;
   color: #fff;
   cursor: pointer;
@@ -41,107 +26,10 @@ button:hover {
   background: #2563eb;
 }
 
-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-input {
-  padding: 8px;
-  margin: 5px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  width: 80%;
-}
-
-.box {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 15px;
-  margin: 10px 0;
-  text-align: left;
-}
-
-.row {
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-}
-
-.row .box {
-  flex: 1;
-}
-
-.label {
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-
-.muted {
-  color: #666;
-  font-size: 14px;
-}
-
-.navbar {
+.ver {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-}
-
-.nav-item {
-  flex: 1;
-  text-align: center;
-  font-size: 14px;
-  color: #333;
-}
-
-/* 全屏效果 */
-.fullscreen {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 9999;
-  background: #000;
-}
-
-.fullscreen iframe {
-  height: 100% !important;
-}
-
-.fullscreen-btn,
-.exit-fullscreen-btn {
-  padding: 8px 12px;
-  margin: 5px;
-}
-
-.exit-fullscreen-btn {
-  display: none;
-}
-
-.theme-switch {
-  margin: 10px 0;
-}
-
-/* 涨跌幅颜色 */
-.change-up {
-  color: #16a34a; /* 绿色 */
-  font-weight: bold;
-}
-.change-down {
-  color: #dc2626; /* 红色 */
-  font-weight: bold;
-}
-.change-flat {
-  color: #666; /* 灰色 */
-  font-weight: bold;
+  bottom: 10px;
+  right: 10px;
+  font-size: 12px;
+  color: #999;
 }
