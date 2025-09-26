@@ -1,95 +1,40 @@
-// Toast
-function showToast(msg, type="info") {
-  const box = document.getElementById("toastBox");
-  if(!box) return;
-  const div = document.createElement("div");
-  div.className = "toast";
-  div.textContent = msg;
-  box.appendChild(div);
-  setTimeout(()=>div.remove(), toastDuration);
-}
+async function connectWallet() {
+  const status = document.getElementById("status");
 
-// 会话管理
-function saveSession(addr){
-  localStorage.setItem("session", JSON.stringify({ addr, ts: Date.now() }));
-}
-function loadSession(){
-  const s = localStorage.getItem("session");
-  return s ? JSON.parse(s) : null;
-}
-function clearSession(){
-  localStorage.removeItem("session");
-}
+  if (!window.ethereum) {
+    status.textContent = "状态：请安装钱包（MetaMask/OKX）";
+    return;
+  }
 
-// 登录
-async function connectWallet(){
-  console.log("🔍 connectWallet() 被调用"); // 调试日志
   try {
-    if(!window.ethereum){ 
-      showToast("请安装钱包","error"); 
-      return; 
-    }
-
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-    // 请求账户
-    const accounts = await provider.send("eth_requestAccounts",[]);
-    console.log("获取到账户:", accounts);
-    if(!accounts || accounts.length === 0){
-      showToast("未检测到账户","error"); return;
-    }
-
-    // 检查网络
-    const net = await provider.getNetwork();
-    console.log("当前网络:", net);
-    if(net.chainId !== SUPPORTED_CHAIN_DEC){
-      showToast("请切换到BSC主网","error"); return;
-    }
-
+    const accounts = await provider.send("eth_requestAccounts", []);
     const addr = accounts[0];
-    saveSession(addr);
-    showToast("连接成功","success");
-    window.location.href="home.html";
-  } catch(e) {
-    console.error("连接失败:", e);
-    showToast("连接失败: " + (e.message || e),"error");
+    status.textContent = "状态：已连接 " + addr;
+    localStorage.setItem("sessionAddr", addr);
+    window.location.href = "home.html";
+  } catch (err) {
+    status.textContent = "状态：连接失败 - " + err.message;
   }
 }
 
-async function logout(){
-  clearSession();
-  showToast("已退出");
-  window.location.href="index.html";
+function logout(){
+  localStorage.removeItem("sessionAddr");
+  window.location.href = "index.html";
 }
 
-// 守卫
-async function guardLogin(){
-  const s = loadSession();
-  if(s) window.location.href="home.html";
-}
-async function guardHome(){
-  const s = loadSession();
-  if(!s){ showToast("请登录"); window.location.href="index.html"; return; }
-  document.getElementById("addrLine").textContent = "地址：" + s.addr;
-  document.getElementById("netLine").textContent = "网络：BSC";
-  document.getElementById("sessionLine").textContent = "会话有效";
-}
-
-// 初始化
 window.addEventListener("DOMContentLoaded", ()=>{
-  console.log("页面已加载:", window.location.pathname);
   const path = window.location.pathname;
-
-  if(path.endsWith("/") || path.endsWith("index.html")){
-    guardLogin();
+  if(path.endsWith("index.html") || path.endsWith("/")){
     const btn = document.getElementById("connectBtn");
-    if(btn) {
-      console.log("绑定按钮事件成功");
-      btn.onclick = connectWallet;
+    if(btn) btn.onclick = connectWallet;
+  }
+  if(path.endsWith("home.html")){
+    const addr = localStorage.getItem("sessionAddr");
+    if(!addr){
+      window.location.href="index.html";
     } else {
-      console.log("❌ 没找到按钮 connectBtn");
+      document.getElementById("addrLine").textContent = "地址：" + addr;
     }
   }
-
-  if(path.endsWith("home.html")) guardHome();
 });
