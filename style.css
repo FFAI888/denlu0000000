@@ -1,15 +1,21 @@
-/* version: v1.02 */
+/* version: v1.03 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #fff; background: #000; overflow-x: hidden; }
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  color: #fff;
+  background: transparent;   /* ✅ 不再强制黑底，交给背景图显示 */
+  overflow-x: hidden;
+}
 img { display: block; max-width: 100%; }
 button { -webkit-tap-highlight-color: transparent; }
 
-/* 背景图 */
+/* 背景图：显示你的 tupian/bg.jpg 原图，不再压暗 */
 .bg {
   position: fixed; inset: 0;
   background: url("./tupian/bg.jpg") center/cover no-repeat;
   z-index: -1;
-  filter: brightness(0.8);
+  /* ❌ 删除了 brightness(0.8) 压暗滤镜 */
 }
 
 /* 版本号徽标 */
