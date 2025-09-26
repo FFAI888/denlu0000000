@@ -2,82 +2,24 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>首页 - v1.70</title>
+  <title>首页 - v1.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </head>
 <body>
-  <div class="topver">首页 - v1.70</div>
   <div class="content">
-
-    <div class="box">
-      <div class="label">钱包</div>
-      <p id="wallet">检测中...</p>
-    </div>
-
-    <div class="row">
-      <div class="box">
-        <div class="label">RONG 余额</div>
-        <p id="balance">检测中...</p>
-      </div>
-      <div class="box">
-        <div class="label">CRC 余额</div>
-        <p id="crcBalance">检测中...</p>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="box">
-        <div class="label">RONG / USDT 价格</div>
-        <p id="price">检测中...</p>
-        <p id="rongChange">--%</p>
-      </div>
-      <div class="box">
-        <div class="label">CRC / USDT 价格</div>
-        <p id="crcPrice">检测中...</p>
-        <p id="crcChange">--%</p>
-      </div>
-    </div>
-
-    <div class="box theme-switch">
-      <div class="label">切换主题</div>
-      <button onclick="switchTheme('dark')">深色</button>
-      <button onclick="switchTheme('light')">浅色</button>
-    </div>
-
-    <div class="box">
-      <div class="label">刷新间隔</div>
-      <button id="r1000" onclick="setRefresh(1000)">1s</button>
-      <button id="r3000" onclick="setRefresh(3000)">3s</button>
-      <button id="r5000" onclick="setRefresh(5000)">5s</button>
-      <button id="r10000" onclick="setRefresh(10000)">10s</button>
-      <p>当前: <span id="curInterval">3 秒</span></p>
-    </div>
-
-    <div class="row">
-      <div class="box">
-        <div class="label">RONG-USDT K线</div>
-        <button onclick="openFullscreen('dexRongUsdt')">全屏</button>
-        <iframe id="dexRongUsdt" src="https://dexscreener.com/bsc/0x7f20dE20b53b8145F75F7a7Bc55CC90AEFEeb795?embed=1&theme=light&trades=0&info=0" width="100%" height="400"></iframe>
-      </div>
-      <div class="box">
-        <div class="label">RONG-CRC K线</div>
-        <button onclick="openFullscreen('dexRongCrc')">全屏</button>
-        <iframe id="dexRongCrc" src="https://dexscreener.com/bsc/0x8cDb69f2dDE96fB98FB5AfA6eB553eaB308D16a5?embed=1&theme=light&trades=0&info=0" width="100%" height="400"></iframe>
-      </div>
-    </div>
-
-    <button id="exitFullscreenBtn" class="exit-fullscreen-btn" onclick="closeFullscreen()">退出全屏</button>
-
+    <h2>首页</h2>
+    <p id="wallet">检测中...</p>
   </div>
+  <div class="ver">v1.0</div>
 
-  <div class="navbar">
-    <div class="nav-item">首页</div>
-    <div class="nav-item">拼团</div>
-    <div class="nav-item">赚币</div>
-    <div class="nav-item">兑换</div>
-    <div class="nav-item">我的</div>
-  </div>
+  <script>
+    window.onload = ()=>{
+      const addr = getWalletAddress();
+      document.getElementById("wallet").innerText = addr ? "钱包地址: " + addr : "未登录";
+    }
+  </script>
 </body>
 </html>
