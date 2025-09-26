@@ -20,43 +20,49 @@ async function connectWallet(){
       if(el) el.innerText = "✅ 已连接: " + addr;
 
     }catch(e){
-      alert("连接失败: " + e.message);
+      showToast("❌ 连接失败: " + e.message, "error");
     }
   }else{
-    alert("请安装 MetaMask 或支持 Web3 的钱包");
+    showToast("⚠️ 请安装 MetaMask 或支持 Web3 的钱包", "warning");
   }
 }
 
-// ---------------- 白名单 & 管理员检测 ----------------
-const WHITELIST_ADDR = "0xYourContractAddressHere"; // 替换为合约地址
-const ABI = [
-  "function isWhitelisted(address) view returns (bool)",
-  "function owner() view returns (address)"
-];
+// ---------------- 链检测（只支持 BSC 主网） ----------------
+const BSC_CHAIN_ID = "0x38"; // BSC 主网 Chain ID
 
-async function checkWhitelist(addr, elementId){
-  try{
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
-    const status = await contract.isWhitelisted(addr);
-    document.getElementById(elementId).innerText = status ? "✅ 已在白名单" : "❌ 不在白名单";
-  }catch(e){
-    console.error("白名单检测失败:", e);
-    document.getElementById(elementId).innerText = "检测失败";
+async function checkNetwork(){
+  if(!window.ethereum){
+    showToast("⚠️ 未检测到钱包", "warning");
+    return;
+  }
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const network = await provider.getNetwork();
+  const chainIdHex = "0x" + network.chainId.toString(16);
+
+  if(chainIdHex !== BSC_CHAIN_ID){
+    showToast("❌ 当前不是 BSC 主网，请切换网络！", "error");
+  }else{
+    showToast("✅ 已连接到 BSC 主网", "success");
   }
 }
 
-async function checkAdmin(addr, elementId){
-  try{
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const contract = new ethers.Contract(WHITELIST_ADDR, ABI, provider);
-    const owner = await contract.owner();
-    document.getElementById(elementId).innerText =
-      addr.toLowerCase() === owner.toLowerCase()
-      ? "✅ 你是管理员"
-      : "❌ 你不是管理员";
-  }catch(e){
-    console.error("管理员检测失败:", e);
-    document.getElementById(elementId).innerText = "检测失败";
-  }
+// ---------------- 弹窗提示 ----------------
+let toastDelay = false;
+function showToast(msg, type){
+  if(toastDelay) return; // 延迟1秒避免重叠
+  toastDelay = true;
+  setTimeout(()=> toastDelay=false, 1000);
+
+  const box = document.getElementById("toastBox");
+  if(!box) return;
+
+  const div = document.createElement("div");
+  div.className = "toast " + type;
+  div.innerText = msg;
+  box.appendChild(div);
+
+  // 3秒后自动消失
+  setTimeout(()=>{
+    div.remove();
+  }, 3000);
 }
