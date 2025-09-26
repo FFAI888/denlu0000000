@@ -46,12 +46,25 @@ async function checkNetwork(){
   }
 }
 
-// ---------------- 弹窗提示 ----------------
-let toastDelay = false;
+// ---------------- 弹窗提示（队列机制） ----------------
+let toastQueue = [];
+let toastActive = false;
+
 function showToast(msg, type){
-  if(toastDelay) return;
-  toastDelay = true;
-  setTimeout(()=> toastDelay=false, 1000);
+  toastQueue.push({ msg, type });
+  if(!toastActive){
+    displayNextToast();
+  }
+}
+
+function displayNextToast(){
+  if(toastQueue.length === 0){
+    toastActive = false;
+    return;
+  }
+
+  toastActive = true;
+  const { msg, type } = toastQueue.shift();
 
   const box = document.getElementById("toastBox");
   if(!box) return;
@@ -67,10 +80,13 @@ function showToast(msg, type){
   div.innerHTML = `<span class="icon">${icon}</span><span>${msg}</span>`;
   box.appendChild(div);
 
-  // 显示3秒后执行上滑退出动画
+  // 显示3秒后退出动画
   setTimeout(()=>{
     div.classList.add("hide");
-    setTimeout(()=> div.remove(), 300); // 动画结束后删除
+    setTimeout(()=>{
+      div.remove();
+      displayNextToast(); // 播放下一个提示
+    }, 300);
   }, 3000);
 }
 
