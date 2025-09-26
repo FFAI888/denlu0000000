@@ -72,20 +72,52 @@ button:hover {
   transform: translateX(-50%);
   z-index: 1000;
 }
+
 .toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 5px;
   padding: 10px 20px;
   border-radius: 6px;
   color: #fff;
   font-size: 14px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  animation: fadeIn 0.3s ease;
+  animation: slideDown 0.3s ease;
 }
+
 .toast.success { background: #16a34a; }
 .toast.error   { background: #dc2626; }
 .toast.warning { background: #f59e0b; }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, -10px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+.toast .icon {
+  font-size: 16px;
+}
+
+/* 下滑进入动画 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* 上滑退出动画 */
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -40px);
+  }
+}
+
+.toast.hide {
+  animation: slideUp 0.3s ease forwards;
 }
