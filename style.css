@@ -6,12 +6,42 @@ body {
   text-align: center;
 }
 
-.content {
-  margin-top: 30%;
+/* 登录页容器 */
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+}
+
+.login-card {
+  background: #fff;
+  padding: 30px 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.logo-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 10px;
+  border-radius: 20%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
 }
 
 button {
-  width: 80%;
+  width: 90%;
   padding: 14px;
   margin: 10px auto;
   border: none;
