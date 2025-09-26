@@ -9,30 +9,30 @@ html, body {
   overflow-x: hidden;
 }
 
-/* 容器 */
-.content, .login-container, .login-card {
-  box-sizing: border-box;
-  max-width: 100%;
-}
-
-/* 登录页容器 */
+/* 登录页容器（背景图 + 渐变） */
 .login-container {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  background: linear-gradient(135deg, rgba(59,130,246,0.85), rgba(139,92,246,0.85)),
+              url("tupian/bg.jpg") no-repeat center center;
+  background-size: cover;
   padding: 0 15px;
 }
 
+/* 登录卡片：毛玻璃效果 */
 .login-card {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 30px 20px;
   border-radius: 16px;
   width: 100%;
   max-width: 400px;
   text-align: center;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Logo */
@@ -47,7 +47,7 @@ html, body {
 
 /* 副标题 */
 .subtitle {
-  color: #666;
+  color: #333;
   font-size: 14px;
   margin-bottom: 20px;
 }
@@ -145,35 +145,12 @@ input {
   animation: slideUp 0.3s ease forwards;
 }
 
-/* ✅ 响应式：小屏幕优化 */
+/* 小屏幕优化 */
 @media (max-width: 400px) {
-  body {
-    font-size: 14px;
-  }
-
-  .login-card {
-    padding: 20px 15px;
-    border-radius: 12px;
-  }
-
-  .logo-img {
-    width: 60px;
-    height: 60px;
-  }
-
-  button {
-    font-size: 14px;
-    padding: 12px;
-    border-radius: 8px;
-  }
-
-  input {
-    font-size: 13px;
-    padding: 10px;
-  }
-
-  .toast {
-    font-size: 12px;
-    padding: 8px 15px;
-  }
+  body { font-size: 14px; }
+  .login-card { padding: 20px 15px; border-radius: 12px; }
+  .logo-img { width: 60px; height: 60px; }
+  button { font-size: 14px; padding: 12px; border-radius: 8px; }
+  input { font-size: 13px; padding: 10px; }
+  .toast { font-size: 12px; padding: 8px 15px; }
 }
