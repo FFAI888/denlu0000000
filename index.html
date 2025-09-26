@@ -2,16 +2,14 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>钱包登录 - v2.0</title>
+  <title>钱包登录 - v3.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </head>
 <body>
-  <!-- 提示容器 -->
   <div id="toastBox"></div>
-
   <div class="login-container">
     <div class="login-card">
       <img src="tupian/logo.png" alt="Logo" class="logo-img">
@@ -21,22 +19,25 @@
       <p id="walletAddress">未连接</p>
     </div>
   </div>
-  <div class="ver">v2.0</div>
+  <div class="ver">v3.0</div>
 
   <script>
     async function connectAndRedirect(){
       await connectWallet();
       const addr = getWalletAddress();
       if(addr){
-        document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
-        window.location.href = "home.html";
+        const ok = await checkNetwork(true);
+        if(ok){
+          document.getElementById("walletAddress").innerText = "✅ 已连接: " + addr;
+          window.location.href = "home.html";
+        }
       }
     }
 
     window.onload = ()=>{
-      checkNetwork();
       if(window.ethereum){
-        window.ethereum.on("chainChanged", ()=> checkNetwork());
+        checkNetwork(true);
+        window.ethereum.on("chainChanged", ()=> checkNetwork(true));
       }
     }
   </script>
