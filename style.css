@@ -64,13 +64,16 @@ button:hover {
   color: #999;
 }
 
-/* 顶部提示 */
+/* 顶部提示容器 */
 #toastBox {
   position: fixed;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
+  max-height: 180px;      /* 最多容纳 3 条提示 */
+  overflow-y: auto;       /* 超出滚动 */
+  scrollbar-width: thin;  /* FireFox */
 }
 
 .toast {
