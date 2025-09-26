@@ -1,23 +1,22 @@
-<!-- version: v1.01 -->
+<!-- version: v1.02 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>登录</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <!-- 版本号浮标 -->
-  <div class="ver-badge">v1.01</div>
+  <div class="ver-badge">v1.02</div>
 
-  <!-- 保留：背景层（不删除，以满足“不减少代码”）；不依赖它显示图片 -->
+  <!-- 保留：背景层（不删除）。实际不使用背景图，默认隐藏由 CSS 控制 -->
   <div class="bg"></div>
 
   <main class="container">
-    <!-- ✅ 新增：直接显示你的图片（不作为背景） -->
+    <!-- 直接显示你的图片（不再依赖 CSS 背景） -->
     <div class="image-wrap">
-      <!-- 你可以把 src 换成 /tupian/your-image.png 或其它文件名 -->
       <img src="tupian/bg.jpg" alt="展示图">
     </div>
 
@@ -33,7 +32,7 @@
     </div>
   </main>
 
-  <!-- ethers.js -->
+  <!-- ethers.js 放在 app.js 之前 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="app.js"></script>
 </body>
