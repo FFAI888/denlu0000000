@@ -1,45 +1,37 @@
-<!-- version: v1.07 -->
+<!-- version: v0.04 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>登录</title>
 
-  <!-- 首帧主题色（HSB 214/98/100 -> #0571FF / #0058E6） -->
-  <script>
-  (function(){
-    try{
-      var main = '#0571FF', sec = '#0058E6';
-      var root=document.documentElement;
-      root.style.setProperty('--theme-main', main);
-      root.style.setProperty('--theme-secondary', sec);
-      localStorage.setItem('themeColorsV2', JSON.stringify({main:main, secondary:sec, ver:'fixed-hsb-214-98-100'}));
-    }catch(e){}
-  })();
-  </script>
+  <!-- 主题色：H214 S97 B100 => 主色 #0873FF / 副色 #0762D9 -->
+  <style>
+    :root{
+      --theme-main: #0873FF;
+      --theme-secondary: #0762D9;
+      --theme-shadow: rgba(8,115,255,.35);
+    }
+  </style>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=0.04" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.07</div>
-
-  <div class="bg-color" id="bgColor"></div>
-  <div class="bg" id="bg"></div>
+  <div id="verBadge" class="ver-badge">v0.04</div>
 
   <main class="container">
-    <div class="login-card" id="loginCard">
-      <img class="logo" src="tupian/logo.png" alt="logo" />
-      <h2>欢迎登录</h2>
+    <div class="login-card">
+      <h2>连接钱包登录</h2>
       <p class="sub">仅支持 BSC 主网（56）</p>
       <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
       <p id="status" class="status">状态：未连接</p>
     </div>
   </main>
 
-  <!-- 必须按此顺序 -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js?v=1.07"></script>
-  <script src="app.js?v=1.07"></script>
+  <!-- 顶部弹窗容器 -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="app.js?v=0.04"></script>
 </body>
 </html>
