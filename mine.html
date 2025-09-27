@@ -1,43 +1,51 @@
-<!-- version: v1.07 -->
+<!-- version: v1.00 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>我的</title>
+  <title>登录</title>
+
+  <!-- 首帧注入主题色，避免闪黑 -->
+  <script>
+  (function(){
+    try{
+      var obj=null; try{ obj=JSON.parse(localStorage.getItem('themeColorsV2')||'null'); }catch(e){}
+      var main=(obj&&obj.main)||'#0d1b2a';
+      var sec =(obj&&obj.secondary)||'#1b263b';
+      var root=document.documentElement;
+      root.style.setProperty('--theme-main', main);
+      root.style.setProperty('--theme-secondary', sec);
+    }catch(e){}
+  })();
+  </script>
+
   <link rel="preload" as="image" href="tupian/bg.jpg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.07</div>
-  <div class="bg-color hidden" id="bgColor"></div>
+  <!-- 右上角版本徽标 -->
+  <div id="verBadge" class="ver-badge">v1.00</div>
+  <!-- 紧挨版本徽标：当前文件提示“文件名（版本，修改的/未修改的）” -->
+  <!-- （由 app.js 自动渲染，无需手写 DOM） -->
+
+  <!-- 背景：先用渐变，图片加载后淡入，避免闪屏 -->
+  <div class="bg-color" id="bgColor"></div>
   <div class="bg" id="bg"></div>
 
-  <header class="topbar">
-    <div class="left">
-      <img class="logo-small" src="tupian/logo.png" alt="logo" />
-      <span class="title">我的</span>
-    </div>
-    <button class="btn-danger" onclick="logout()">退出</button>
-  </header>
-
   <main class="container">
-    <section class="panel">
-      <h3>我的（占位页）</h3>
-      <p id="addrMine">当前地址：检测中…</p>
-    </section>
+    <div class="login-card">
+      <img class="logo" src="tupian/logo.png" alt="logo" />
+      <h2>欢迎登录</h2>
+      <p class="sub">仅支持 BSC 主网（56）</p>
+      <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
+      <p id="status" class="status">状态：未连接</p>
+    </div>
   </main>
 
-  <nav class="tabbar">
-    <a href="home.html"  data-tab="home">🏠 首页</a>
-    <a href="group.html" data-tab="group">👥 拼团</a>
-    <a href="earn.html"  data-tab="earn">💰 赚币</a>
-    <a href="swap.html"  data-tab="swap">🔄 兑换</a>
-    <a href="mine.html"  data-tab="mine">👤 我的</a>
-  </nav>
-
+  <!-- 必须按此顺序 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="config.js?v=1.00"></script>
+  <script src="app.js?v=1.00"></script>
 </body>
 </html>
