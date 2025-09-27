@@ -1,16 +1,33 @@
-<!-- version: v1.07 -->
+<!-- version: v1.00 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>首页</title>
+
+  <!-- 首帧注入主题色，避免闪黑 -->
+  <script>
+  (function(){
+    try{
+      var obj=null; try{ obj=JSON.parse(localStorage.getItem('themeColorsV2')||'null'); }catch(e){}
+      var main=(obj&&obj.main)||'#0d1b2a';
+      var sec =(obj&&obj.secondary)||'#1b263b';
+      var root=document.documentElement;
+      root.style.setProperty('--theme-main', main);
+      root.style.setProperty('--theme-secondary', sec);
+    }catch(e){}
+  })();
+  </script>
+
   <link rel="preload" as="image" href="tupian/bg.jpg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.07</div>
-  <div class="bg-color hidden" id="bgColor"></div>
+  <div id="verBadge" class="ver-badge">v1.00</div>
+  <!-- 文件名旁提示由 app.js 注入 -->
+
+  <div class="bg-color" id="bgColor"></div>
   <div class="bg" id="bg"></div>
 
   <header class="topbar">
@@ -24,22 +41,14 @@
   <main class="container">
     <section class="panel">
       <h3>钱包状态</h3>
-      <p id="addrLine">地址：未连接</p>
-      <p id="netLine">网络：未检测</p>
-      <p id="guardLine">守卫：未生效</p>
+      <p id="addrLine">地址：检测中…</p>
+      <p id="netLine">网络：检测中…</p>
+      <p id="guardLine">守卫：检测中…</p>
     </section>
   </main>
 
-  <nav class="tabbar">
-    <a href="home.html" data-tab="home">🏠 首页</a>
-    <a href="group.html" data-tab="group">👥 拼团</a>
-    <a href="earn.html"  data-tab="earn">💰 赚币</a>
-    <a href="swap.html"  data-tab="swap">🔄 兑换</a>
-    <a href="mine.html"  data-tab="mine">👤 我的</a>
-  </nav>
-
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="config.js?v=1.00"></script>
+  <script src="app.js?v=1.00"></script>
 </body>
 </html>
