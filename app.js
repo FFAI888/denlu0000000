@@ -1,4 +1,4 @@
-// version: v1.06
+// version: v1.07
 
 /*********** 版本徽标 ***********/
 function setVersionBadge(){
@@ -18,114 +18,185 @@ function isSessionFresh(sess){ return !!(sess && typeof sess.ts === "number" && 
 async function getAuthorizedAccounts(){
   if (!window.ethereum) return [];
   try{
-    if (typeof window.ethereum.request === "function"){
-      return await window.ethereum.request({ method: "eth_accounts" }); // 不弹窗
-    }else{
-      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      return await provider.send("eth_accounts", []);
-    }
+    if (typeof window.ethereum.request === "function") return await window.ethereum.request({ method: "eth_accounts" });
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    return await provider.send("eth_accounts", []);
   }catch(e){ return []; }
 }
 async function getChainIdHex(){
   if (!window.ethereum) return null;
   try{
-    if (typeof window.ethereum.request === "function"){
-      return await window.ethereum.request({ method: "eth_chainId" });
-    }else{
-      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      const net = await provider.getNetwork();
-      return "0x" + net.chainId.toString(16);
-    }
+    if (typeof window.ethereum.request === "function") return await window.ethereum.request({ method: "eth_chainId" });
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    const net = await provider.getNetwork();
+    return "0x" + net.chainId.toString(16);
   }catch(e){ return null; }
 }
 
-/*********** 主题：存取与应用（用于占位渐变） ***********/
-function saveThemeColors(main, secondary){ localStorage.setItem(LS_KEY.THEME, JSON.stringify({ main, secondary })); }
-function loadThemeColors(){ try { return JSON.parse(localStorage.getItem(LS_KEY.THEME)); } catch(e){ return null; } }
+/*********** 主题：缓存读写 ***********/
+function saveThemeColors(main, secondary){
+  localStorage.setItem(LS_KEY.THEME, JSON.stringify({ main, secondary, ver: BG_IMAGE_VERSION }));
+}
+function loadThemeColors(){
+  try {
+    const obj = JSON.parse(localStorage.getItem(LS_KEY.THEME));
+    if (obj && obj.ver === BG_IMAGE_VERSION && obj.main && obj.secondary) return obj;
+  } catch(e){}
+  return null;
+}
 function applyCssTheme(main, secondary){
   const root = document.documentElement;
   if (main)      root.style.setProperty("--theme-main", main);
   if (secondary) root.style.setProperty("--theme-secondary", secondary);
 }
 
-/* 颜色工具/取色（与上版一致） */
+/*********** 颜色工具 + 聚类取色（更接近原图） ***********/
 function toHex(c){ return c.toString(16).padStart(2,"0"); }
 function rgbToHex(r,g,b){ return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
+function lum([r,g,b]){ return 0.2126*r + 0.7152*g + 0.0722*b; }
 function dist2(a,b){ const dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2]; return dr*dr+dg*dg+db*db; }
-function extractPaletteFromImage(img){
-  const w = 48, h = 48;
+
+/** 对 bitmap 进行快速聚类（近似 k-means），返回两种最能代表且对比度较好的颜色 */
+function paletteFromBitmap(bitmap){
+  const w = 64, h = 64;
   const cvs = document.createElement("canvas"); cvs.width = w; cvs.height = h;
   const ctx = cvs.getContext("2d", { willReadFrequently: true });
-  ctx.drawImage(img, 0, 0, w, h);
+  ctx.drawImage(bitmap, 0, 0, w, h);
   const data = ctx.getImageData(0,0,w,h).data;
+
+  // 采样与预聚合（16 级量化 → 降噪）
   const buckets = new Map();
   for(let i=0;i<data.length;i+=4){
-    const a = data[i+3]; if (a < 128) continue;
+    const a = data[i+3]; if (a < 200) continue; // 透明区域忽略
     const r = data[i], g = data[i+1], b = data[i+2];
     const key = ((r>>4)<<8) | ((g>>4)<<4) | (b>>4);
-    const rec = buckets.get(key) || {count:0, sum:[0,0,0]};
-    rec.count++; rec.sum[0]+=r; rec.sum[1]+=g; rec.sum[2]+=b;
+    const rec = buckets.get(key) || { c:0, sum:[0,0,0] };
+    rec.c++; rec.sum[0]+=r; rec.sum[1]+=g; rec.sum[2]+=b;
     buckets.set(key, rec);
   }
-  const arr = [];
-  buckets.forEach(v => arr.push({ c: v.count, avg: [(v.sum[0]/v.count)|0, (v.sum[1]/v.count)|0, (v.sum[2]/v.count)|0] }));
-  arr.sort((a,b)=> b.c-a.c);
-  const top = arr.slice(0,10);
-  const main = top.length ? top[0].avg : [13,27,42];
-  let sec = [27,38,59], md = -1;
-  for(let i=1;i<top.length;i++){
-    const d = dist2(top[i].avg, main); if (d>md){ md=d; sec=top[i].avg; }
-  }
-  return { main: rgbToHex(main[0],main[1],main[2]), secondary: rgbToHex(sec[0],sec[1],sec[2]) };
-}
+  const points = [];
+  buckets.forEach(v=>{
+    points.push([ (v.sum[0]/v.c)|0, (v.sum[1]/v.c)|0, (v.sum[2]/v.c)|0, v.c ]);
+  });
+  points.sort((a,b)=> b[3]-a[3]); // 先按像素数排序
 
-/*********** 背景：预载并淡入（避免逐行显现） ***********/
-function preloadAndShowBackground(src="tupian/bg.jpg"){
-  const el = document.getElementById("bg");
-  if (!el) return;
-
-  const img = new Image();
-  if (IMAGE_CROSSORIGIN) img.crossOrigin = "anonymous";
-
-  img.onload = () => {
-    // THEME_MODE === "auto" 才尝试从图片提色；manual 模式完全尊重手动色
-    if (THEME_MODE === "auto"){
-      const stored = loadThemeColors();
-      try {
-        const { main, secondary } = extractPaletteFromImage(img);
-        // 无缓存或缓存缺失 → 保存并应用（占位渐变即时更新到与图片更像）
-        if (!stored || !stored.main || !stored.secondary){
-          applyCssTheme(main, secondary);
-          saveThemeColors(main, secondary);
-        }
-      } catch(e){ /* 忽略取色失败（可能跨域或图片特殊），保留占位色 */ }
+  // 取前 N 个候选，再挑“最远”的两色，保证对比/渐变层次
+  const N = Math.min(12, points.length);
+  let bestA = points[0] || [13,27,42,1], bestB = points[1] || [27,38,59,1], bestD = -1;
+  for(let i=0;i<N;i++){
+    for(let j=i+1;j<N;j++){
+      const d = dist2(points[i], points[j]);
+      if (d > bestD){
+        // 避免两色亮度过近
+        const l1 = lum(points[i]), l2 = lum(points[j]);
+        if (Math.abs(l1 - l2) < 12) continue;
+        bestD = d; bestA = points[i]; bestB = points[j];
+      }
     }
+  }
 
-    // 设置背景并淡入
-    el.style.backgroundImage = `url("${src}")`;
-    requestAnimationFrame(()=> el.classList.add("show"));
+  // 主色置暗（用于渐变起点），次色置亮（用于渐变终点）
+  let main = bestA, secondary = bestB;
+  if (lum(main) > lum(secondary)) [main, secondary] = [secondary, main];
+
+  return {
+    main: rgbToHex(main[0], main[1], main[2]),
+    secondary: rgbToHex(secondary[0], secondary[1], secondary[2]),
   };
-  img.onerror = () => { /* 加载失败就继续用渐变，不阻断页面 */ };
-
-  img.src = src;
-  if (img.decode) { img.decode().catch(()=>{}); }
 }
 
-/*********** 首屏：占位色策略 ***********/
+/*********** 背景：严格自动取色 → 占位渐变 → 解码完成后淡入原图 ***********/
+async function autoStrictPipeline(src){
+  const bgColorEl = document.getElementById("bgColor");
+  const bgEl = document.getElementById("bg");
+  if (!bgColorEl || !bgEl) return;
+
+  // 若已有匹配版本的缓存色，立刻应用并显示占位渐变（避免首屏空白）
+  const cached = loadThemeColors();
+  if (cached){
+    applyCssTheme(cached.main, cached.secondary);
+    bgColorEl.classList.remove("hidden");
+  }
+
+  try{
+    // 1) 拉取图片 blob（一次请求同时用于取色与显示）
+    const resp = await fetch(src, { cache: "force-cache", mode: IMAGE_CROSSORIGIN ? "cors" : "no-cors" });
+    const blob = await resp.blob();
+    // 2) 生成缩略位图并取色（更接近原图）
+    let bmp;
+    if ("createImageBitmap" in window){
+      bmp = await createImageBitmap(blob, { resizeWidth:64, resizeHeight:64 });
+    } else {
+      // 兼容：退化成 Image + canvas
+      const tmpImg = await blobToImage(blob);
+      bmp = tmpImg; // 下方 paletteFromBitmap 同样支持 drawImage(Image,...)
+    }
+    const pal = paletteFromBitmap(bmp);
+    applyCssTheme(pal.main, pal.secondary);
+    saveThemeColors(pal.main, pal.secondary);
+    // 确保占位渐变已显示
+    bgColorEl.classList.remove("hidden");
+
+    // 3) 用同一份 blob 显示真实背景，等待 decode 后淡入
+    const url = URL.createObjectURL(blob);
+    await decodeImage(url);
+    bgEl.style.backgroundImage = `url("${url}")`;
+    requestAnimationFrame(()=> bgEl.classList.add("show"));
+    // 可稍后释放 URL（等过渡完成）
+    setTimeout(()=> URL.revokeObjectURL(url), 1500);
+  }catch(e){
+    // 失败则仅显示占位渐变，不阻塞其它功能
+    bgColorEl.classList.remove("hidden");
+  }
+}
+
+/** 工具：blob → <img> */
+function blobToImage(blob){
+  return new Promise((res, rej)=>{
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    if (IMAGE_CROSSORIGIN) img.crossOrigin = "anonymous";
+    img.onload = ()=>{ URL.revokeObjectURL(url); res(img); };
+    img.onerror = (err)=>{ URL.revokeObjectURL(url); rej(err); };
+    img.src = url;
+  });
+}
+/** 工具：等待图片 decode 完成（用于淡入时机更平滑） */
+function decodeImage(url){
+  return new Promise((res)=>{
+    const img = new Image();
+    if (IMAGE_CROSSORIGIN) img.crossOrigin = "anonymous";
+    img.onload = ()=>{ if (img.decode) img.decode().then(res).catch(res); else res(); };
+    img.onerror = ()=> res();
+    img.src = url;
+  });
+}
+
+/*********** 首屏：模式分支 ***********/
 function initThemePlaceholder(){
+  const bgColorEl = document.getElementById("bgColor");
+  if (!bgColorEl) return;
+
   if (THEME_MODE === "manual"){
-    // 你手动指定的两种颜色，100% 可控，首屏即一致
     applyCssTheme(THEME_MANUAL_MAIN, THEME_MANUAL_SECONDARY);
+    bgColorEl.classList.remove("hidden");
     return;
   }
-  // auto 模式：优先缓存色，没有则用 CSS 默认值，稍后取色成功会自动更新
-  const stored = loadThemeColors();
-  if (stored && stored.main && stored.secondary){
-    applyCssTheme(stored.main, stored.secondary);
+  if (THEME_MODE === "auto"){
+    const stored = loadThemeColors();
+    if (stored) applyCssTheme(stored.main, stored.secondary);
+    // auto 模式占位渐变直接显示（若无缓存则先用默认色）
+    bgColorEl.classList.remove("hidden");
+    return;
+  }
+  if (THEME_MODE === "auto_strict"){
+    // 严格模式：是否显示由 autoStrictPipeline 决定（有缓存会立刻展示）
+    // 这里不主动显示，占位层默认 hidden，避免“错色闪现”
+    return;
   }
 }
 
-/*********** 连接/退出 与 守卫（保持不变） ***********/
+/*********** 连接钱包/退出/守卫（保持原逻辑） ***********/
 async function connectWallet(){
   const status = document.getElementById("status");
   const say = (t)=>{ if(status) status.textContent = "状态：" + t; };
@@ -237,10 +308,29 @@ function setActiveTabbar(){
 window.addEventListener("DOMContentLoaded", async ()=>{
   setVersionBadge();
 
-  // 1) 占位色：manual 立即使用你设置的颜色；auto 先用缓存
+  // 1) 初始化占位层策略
   initThemePlaceholder();
-  // 2) 预载大图，成功后淡入（auto 时可顺带更新缓存色）
-  preloadAndShowBackground("tupian/bg.jpg");
+
+  // 2) 严格自动取色 + 占位渐变 + 解码后淡入原图
+  if (THEME_MODE === "auto_strict"){
+    await autoStrictPipeline(BG_IMAGE_SRC);
+  } else {
+    // 兼容其它模式：直接预载并淡入（保留旧逻辑的一致体验）
+    await (async function preloadAndShowBackground(src){
+      const bgEl = document.getElementById("bg");
+      const img = new Image();
+      if (IMAGE_CROSSORIGIN) img.crossOrigin = "anonymous";
+      img.onload = ()=>{
+        bgEl.style.backgroundImage = `url("${src}")`;
+        requestAnimationFrame(()=> bgEl.classList.add("show"));
+      };
+      img.src = src;
+      if (img.decode) img.decode().catch(()=>{});
+    })(BG_IMAGE_SRC);
+    // 确保占位层显示（auto/manual）
+    const bgColorEl = document.getElementById("bgColor");
+    if (bgColorEl) bgColorEl.classList.remove("hidden");
+  }
 
   const p = location.pathname;
   if (p.endsWith("/") || p.endsWith("index.html")) {
