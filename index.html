@@ -1,4 +1,4 @@
-<!-- version: v1.04 -->
+<!-- version: v1.07 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -6,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>登录</title>
 
-  <!-- 首帧注入主题色（HSB 214/98/100 -> #0571FF / #0058E6） -->
+  <!-- 首帧主题色（HSB 214/98/100 -> #0571FF / #0058E6） -->
   <script>
   (function(){
     try{
-      var main = '#0571FF'; var sec  = '#0058E6';
+      var main = '#0571FF', sec = '#0058E6';
       var root=document.documentElement;
       root.style.setProperty('--theme-main', main);
       root.style.setProperty('--theme-secondary', sec);
@@ -19,11 +19,10 @@
   })();
   </script>
 
-  <link rel="preload" as="image" href="tupian/bg.jpg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.04</div>
+  <div id="verBadge" class="ver-badge">v1.07</div>
 
   <div class="bg-color" id="bgColor"></div>
   <div class="bg" id="bg"></div>
@@ -40,7 +39,7 @@
 
   <!-- 必须按此顺序 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js?v=1.04"></script>
-  <script src="app.js?v=1.04"></script>
+  <script src="config.js?v=1.07"></script>
+  <script src="app.js?v=1.07"></script>
 </body>
 </html>
