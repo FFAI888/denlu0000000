@@ -1,4 +1,4 @@
-// version: v1.01
+// version: v1.03
 
 /*********** 版本徽标 ***********/
 function setVersionBadge(){
@@ -6,25 +6,8 @@ function setVersionBadge(){
   if (el && typeof APP_VERSION === "string") el.textContent = APP_VERSION;
 }
 
-/*********** 文件名旁提示：文件名（版本，修改的/未修改的） ***********/
-function renderCurrentFileStatusChip(){
-  try{
-    const current = (location.pathname.split('/').pop() || 'index.html');
-    const list = (typeof CHANGE_LOG !== 'undefined' && Array.isArray(CHANGE_LOG)) ? CHANGE_LOG : [];
-    const meta = list.find(x => String(x.file||'') === current);
-    const ver = meta ? (meta.ver || APP_VERSION) : APP_VERSION;
-    const tag = meta ? (meta.status === '已修改' ? '修改的' : '未修改的') : '未标注的';
-
-    let chip = document.getElementById("fileStatusMini");
-    if (!chip){
-      chip = document.createElement("span");
-      chip.id = "fileStatusMini";
-      chip.className = "file-status-mini";
-      document.body.appendChild(chip);
-    }
-    chip.textContent = `${current}（${ver}，${tag}）`;
-  }catch(e){ console.warn("renderCurrentFileStatusChip error:", e); }
-}
+/*********** （已删除）文件修改提示渲染 ***********/
+// 按你的要求，彻底移除“文件名（版本，修改的/未修改的）”渲染逻辑与依赖。
 
 /*********** HSB → RGB/HEX ***********/
 function hsvToRgb(h, sPct, vPct){
@@ -50,7 +33,6 @@ function rgbToHex([r,g,b]){ const h=n=>('0'+n.toString(16)).slice(-2); return `#
 function applyFixedHSBTheme(){
   try{
     if (!THEME_FIXED_HSB || !THEME_FIXED_HSB.enabled) return;
-    // 主色：b=100；副色：稍暗（b*0.85）
     const mainRGB = hsvToRgb(THEME_FIXED_HSB.h, THEME_FIXED_HSB.s, THEME_FIXED_HSB.b);
     const secRGB  = hsvToRgb(THEME_FIXED_HSB.h, THEME_FIXED_HSB.s, Math.round(THEME_FIXED_HSB.b*0.85));
     const mainHex = rgbToHex(mainRGB);
@@ -167,12 +149,9 @@ async function guardAppPage(){
   const result = await verifySessionStrict();
   if (!result.ok) { clearSession(); window.location.href = "index.html"; return; }
   const sess = loadSession();
-  const addrEl = document.getElementById("addrLine");
-  if (addrEl) addrEl.textContent = "地址：" + sess.addr;
-  const netEl = document.getElementById("netLine");
-  if (netEl) netEl.textContent = "网络：BSC（56）";
-  const guardEl = document.getElementById("guardLine");
-  if (guardEl) guardEl.textContent = "守卫：已生效";
+  const addrEl = document.getElementById("addrLine"); if (addrEl) addrEl.textContent = "地址：" + sess.addr;
+  const netEl  = document.getElementById("netLine");  if (netEl)  netEl.textContent  = "网络：BSC（56）";
+  const guardEl= document.getElementById("guardLine"); if (guardEl) guardEl.textContent= "守卫：已生效";
 
   attachProviderGuards();
   setInterval(async ()=>{
@@ -197,11 +176,7 @@ function loadAndApplyBackground(){
 /*********** 启动 ***********/
 document.addEventListener("DOMContentLoaded", ()=>{
   setVersionBadge();
-  renderCurrentFileStatusChip();
-
-  // 应用固定HSB主题到整站（再次写入，保证统一）
   applyFixedHSBTheme();
-
   loadAndApplyBackground();
 
   const isLogin = location.pathname.endsWith("index.html") || /\/$/.test(location.pathname);
