@@ -1,32 +1,32 @@
-<!-- version: v1.07 -->
+<!-- version: v1.00 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>登录</title>
-  <link rel="preload" as="image" href="tupian/bg.jpg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.07</div>
+  <!-- 右上角版本号 -->
+  <div id="verBadge" class="ver-badge">v1.00</div>
 
-  <!-- 占位渐变（先隐藏，识别到颜色后显示） + 背景图（预载完成再淡入） -->
-  <div class="bg-color hidden" id="bgColor"></div>
-  <div class="bg" id="bg"></div>
+  <!-- 文件名（版本，修改的/未修改的）小标签由 app.js 注入 -->
+  <!-- 背景 -->
+  <div class="bg-gradient"></div>
 
   <main class="container">
-    <div class="login-card">
-      <img class="logo" src="tupian/logo.png" alt="logo" />
-      <h2>欢迎登录</h2>
-      <p class="sub">仅支持 BSC 主网</p>
+    <section class="login-card">
+      <div class="login-logo">DApp</div>
+      <h2>连接钱包登录</h2>
+      <p class="sub">仅支持 BSC 主网 (56)</p>
       <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
       <p id="status" class="status">状态：未连接</p>
-    </div>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="config.js?v=1.00"></script>
+  <script src="app.js?v=1.00"></script>
 </body>
 </html>
