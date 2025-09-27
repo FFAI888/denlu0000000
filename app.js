@@ -1,4 +1,4 @@
-// version: v1.00
+// version: v1.01
 
 /*********** 版本徽标 ***********/
 function setVersionBadge(){
@@ -24,6 +24,44 @@ function renderCurrentFileStatusChip(){
     }
     chip.textContent = `${current}（${ver}，${tag}）`;
   }catch(e){ console.warn("renderCurrentFileStatusChip error:", e); }
+}
+
+/*********** HSB → RGB/HEX ***********/
+function hsvToRgb(h, sPct, vPct){
+  const s = sPct/100, v = vPct/100;
+  const c = v*s;
+  const x = c*(1 - Math.abs(((h/60)%2) - 1));
+  const m = v - c;
+  let r=0,g=0,b=0;
+  if (0<=h && h<60){ r=c; g=x; b=0; }
+  else if (60<=h && h<120){ r=x; g=c; b=0; }
+  else if (120<=h && h<180){ r=0; g=c; b=x; }
+  else if (180<=h && h<240){ r=0; g=x; b=c; }
+  else if (240<=h && h<300){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  r = Math.round((r+m)*255);
+  g = Math.round((g+m)*255);
+  b = Math.round((b+m)*255);
+  return [r,g,b];
+}
+function rgbToHex([r,g,b]){ const h=n=>('0'+n.toString(16)).slice(-2); return `#${h(r)}${h(g)}${h(b)}`; }
+
+/** 应用固定HSB主题到 CSS 变量 + LocalStorage */
+function applyFixedHSBTheme(){
+  try{
+    if (!THEME_FIXED_HSB || !THEME_FIXED_HSB.enabled) return;
+    // 主色：b=100；副色：稍暗（b*0.85）
+    const mainRGB = hsvToRgb(THEME_FIXED_HSB.h, THEME_FIXED_HSB.s, THEME_FIXED_HSB.b);
+    const secRGB  = hsvToRgb(THEME_FIXED_HSB.h, THEME_FIXED_HSB.s, Math.round(THEME_FIXED_HSB.b*0.85));
+    const mainHex = rgbToHex(mainRGB);
+    const secHex  = rgbToHex(secRGB);
+
+    const root = document.documentElement;
+    root.style.setProperty('--theme-main', mainHex);
+    root.style.setProperty('--theme-secondary', secHex);
+
+    localStorage.setItem(LS_KEY.THEME, JSON.stringify({ main: mainHex, secondary: secHex, ver: `fixed-hsb-${THEME_FIXED_HSB.h}-${THEME_FIXED_HSB.s}-${THEME_FIXED_HSB.b}` }));
+  }catch(e){}
 }
 
 /*********** 会话存取 ***********/
@@ -75,7 +113,6 @@ async function connectWallet(){
     const addr = accounts[0];
     say("已连接 " + addr.slice(0,6) + "..." + addr.slice(-4));
     saveSession(addr, SUPPORTED_CHAIN_HEX);
-    // 跳首页
     window.location.href = "home.html";
   } catch (err) {
     const msg = err && (err.message || err.reason) ? (err.message || err.reason) : String(err);
@@ -87,7 +124,7 @@ async function connectWallet(){
 /*********** 退出登录 ***********/
 function logout(){ clearSession(); window.location.href = "index.html"; }
 
-/*********** 页面守卫：必须已登录 + 主网 + 同地址 ***********/
+/*********** 页面守卫 ***********/
 async function verifySessionStrict(){
   const sess = loadSession();
   if (!sess) return { ok:false, reason:"no-session" };
@@ -104,11 +141,8 @@ async function verifySessionStrict(){
   const current = accs && accs[0] ? accs[0].toLowerCase() : "";
   if (!current) return { ok:false, reason:"no-authorized-account" };
   if (current !== String(sess.addr||"").toLowerCase()) return { ok:false, reason:"addr-mismatch" };
-
   return { ok:true };
 }
-
-/*********** 监听切换账号/网络，强制退出 ***********/
 function attachProviderGuards(){
   if (!window.ethereum) return;
   window.ethereum.on?.("accountsChanged", (accs)=>{
@@ -123,21 +157,16 @@ function attachProviderGuards(){
     }
   });
 }
-
-/*********** 登录页守卫 ***********/
 async function guardLoginPage(){
   const result = await verifySessionStrict();
   if (result.ok) { window.location.href = "home.html"; return; }
   const btn = document.getElementById("connectBtn");
   if (btn) btn.onclick = connectWallet;
 }
-
-/*********** 应用页守卫（首页） ***********/
 async function guardAppPage(){
   const result = await verifySessionStrict();
   if (!result.ok) { clearSession(); window.location.href = "index.html"; return; }
   const sess = loadSession();
-  // 填充用户信息
   const addrEl = document.getElementById("addrLine");
   if (addrEl) addrEl.textContent = "地址：" + sess.addr;
   const netEl = document.getElementById("netLine");
@@ -146,7 +175,6 @@ async function guardAppPage(){
   if (guardEl) guardEl.textContent = "守卫：已生效";
 
   attachProviderGuards();
-  // 每 15 秒复核一次有效性
   setInterval(async ()=>{
     const ok = await verifySessionStrict();
     if (!ok.ok) { clearSession(); window.location.href = "index.html"; }
@@ -170,6 +198,10 @@ function loadAndApplyBackground(){
 document.addEventListener("DOMContentLoaded", ()=>{
   setVersionBadge();
   renderCurrentFileStatusChip();
+
+  // 应用固定HSB主题到整站（再次写入，保证统一）
+  applyFixedHSBTheme();
+
   loadAndApplyBackground();
 
   const isLogin = location.pathname.endsWith("index.html") || /\/$/.test(location.pathname);
