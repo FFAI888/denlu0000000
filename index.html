@@ -1,4 +1,4 @@
-<!-- version: v1.06 -->
+<!-- version: v1.07 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -9,10 +9,10 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.06</div>
+  <div id="verBadge" class="ver-badge">v1.07</div>
 
-  <!-- 占位渐变（立即可见） + 背景图（预载完成后淡入） -->
-  <div class="bg-color" id="bgColor"></div>
+  <!-- 占位渐变（先隐藏，识别到颜色后显示） + 背景图（预载完成再淡入） -->
+  <div class="bg-color hidden" id="bgColor"></div>
   <div class="bg" id="bg"></div>
 
   <main class="container">
