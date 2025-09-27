@@ -1,4 +1,4 @@
-<!-- version: v1.00 -->
+<!-- version: v1.03 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -6,13 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>首页</title>
 
-  <!-- 首帧注入主题色，避免闪黑 -->
+  <!-- 使用固定 HSB 主题，避免闪屏 -->
   <script>
   (function(){
     try{
       var obj=null; try{ obj=JSON.parse(localStorage.getItem('themeColorsV2')||'null'); }catch(e){}
-      var main=(obj&&obj.main)||'#0d1b2a';
-      var sec =(obj&&obj.secondary)||'#1b263b';
+      var main=(obj&&obj.main)||'#0571FF';
+      var sec =(obj&&obj.secondary)||'#0058E6';
       var root=document.documentElement;
       root.style.setProperty('--theme-main', main);
       root.style.setProperty('--theme-secondary', sec);
@@ -24,8 +24,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.00</div>
-  <!-- 文件名旁提示由 app.js 注入 -->
+  <div id="verBadge" class="ver-badge">v1.03</div>
 
   <div class="bg-color" id="bgColor"></div>
   <div class="bg" id="bg"></div>
@@ -48,7 +47,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js?v=1.00"></script>
-  <script src="app.js?v=1.00"></script>
+  <script src="config.js?v=1.03"></script>
+  <script src="app.js?v=1.03"></script>
 </body>
 </html>
