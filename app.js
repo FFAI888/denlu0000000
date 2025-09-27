@@ -1,4 +1,4 @@
-// version: v1.04
+// version: v1.06
 
 /*********** 版本徽标 ***********/
 function setVersionBadge(){
@@ -10,37 +10,54 @@ function setVersionBadge(){
 function saveSession(addr, chainId){
   localStorage.setItem(LS_KEY.SESSION, JSON.stringify({ addr, chainId, ts: Date.now() }));
 }
-function loadSession(){
-  try { return JSON.parse(localStorage.getItem(LS_KEY.SESSION)); } catch(e){ return null; }
-}
+function loadSession(){ try { return JSON.parse(localStorage.getItem(LS_KEY.SESSION)); } catch(e){ return null; } }
 function clearSession(){ localStorage.removeItem(LS_KEY.SESSION); }
+function isSessionFresh(sess){ return !!(sess && typeof sess.ts === "number" && (Date.now() - sess.ts) <= SESSION_TTL_MS); }
 
-/*********** 主题色：存取与应用（用于占位渐变） ***********/
-function saveThemeColors(main, secondary){
-  localStorage.setItem(LS_KEY.THEME, JSON.stringify({ main, secondary }));
+/*********** Provider 辅助 ***********/
+async function getAuthorizedAccounts(){
+  if (!window.ethereum) return [];
+  try{
+    if (typeof window.ethereum.request === "function"){
+      return await window.ethereum.request({ method: "eth_accounts" }); // 不弹窗
+    }else{
+      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      return await provider.send("eth_accounts", []);
+    }
+  }catch(e){ return []; }
 }
-function loadThemeColors(){
-  try { return JSON.parse(localStorage.getItem(LS_KEY.THEME)); } catch(e){ return null; }
+async function getChainIdHex(){
+  if (!window.ethereum) return null;
+  try{
+    if (typeof window.ethereum.request === "function"){
+      return await window.ethereum.request({ method: "eth_chainId" });
+    }else{
+      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      const net = await provider.getNetwork();
+      return "0x" + net.chainId.toString(16);
+    }
+  }catch(e){ return null; }
 }
+
+/*********** 主题：存取与应用（用于占位渐变） ***********/
+function saveThemeColors(main, secondary){ localStorage.setItem(LS_KEY.THEME, JSON.stringify({ main, secondary })); }
+function loadThemeColors(){ try { return JSON.parse(localStorage.getItem(LS_KEY.THEME)); } catch(e){ return null; } }
 function applyCssTheme(main, secondary){
   const root = document.documentElement;
   if (main)      root.style.setProperty("--theme-main", main);
   if (secondary) root.style.setProperty("--theme-secondary", secondary);
 }
 
-/* 简单颜色工具 */
+/* 颜色工具/取色（与上版一致） */
 function toHex(c){ return c.toString(16).padStart(2,"0"); }
 function rgbToHex(r,g,b){ return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
 function dist2(a,b){ const dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2]; return dr*dr+dg*dg+db*db; }
-
-/* 从图片快速提取主/次色（48x48 量化） */
 function extractPaletteFromImage(img){
   const w = 48, h = 48;
   const cvs = document.createElement("canvas"); cvs.width = w; cvs.height = h;
   const ctx = cvs.getContext("2d", { willReadFrequently: true });
   ctx.drawImage(img, 0, 0, w, h);
   const data = ctx.getImageData(0,0,w,h).data;
-
   const buckets = new Map();
   for(let i=0;i<data.length;i+=4){
     const a = data[i+3]; if (a < 128) continue;
@@ -54,54 +71,61 @@ function extractPaletteFromImage(img){
   buckets.forEach(v => arr.push({ c: v.count, avg: [(v.sum[0]/v.count)|0, (v.sum[1]/v.count)|0, (v.sum[2]/v.count)|0] }));
   arr.sort((a,b)=> b.c-a.c);
   const top = arr.slice(0,10);
-
   const main = top.length ? top[0].avg : [13,27,42];
   let sec = [27,38,59], md = -1;
   for(let i=1;i<top.length;i++){
     const d = dist2(top[i].avg, main); if (d>md){ md=d; sec=top[i].avg; }
   }
-  return { main: rgbToHex(main[0],main[1],main[2]),
-           secondary: rgbToHex(sec[0],sec[1],sec[2]) };
+  return { main: rgbToHex(main[0],main[1],main[2]), secondary: rgbToHex(sec[0],sec[1],sec[2]) };
 }
 
 /*********** 背景：预载并淡入（避免逐行显现） ***********/
 function preloadAndShowBackground(src="tupian/bg.jpg"){
   const el = document.getElementById("bg");
   if (!el) return;
-  // 预载
+
   const img = new Image();
+  if (IMAGE_CROSSORIGIN) img.crossOrigin = "anonymous";
+
   img.onload = () => {
-    // 提前把颜色也算了（首次或主题未设置）
-    const stored = loadThemeColors();
-    try {
-      const { main, secondary } = extractPaletteFromImage(img);
-      if (!stored || !stored.main || !stored.secondary){
-        applyCssTheme(main, secondary);
-        saveThemeColors(main, secondary);
-      }
-    } catch(e){ /* 忽略取色失败 */ }
+    // THEME_MODE === "auto" 才尝试从图片提色；manual 模式完全尊重手动色
+    if (THEME_MODE === "auto"){
+      const stored = loadThemeColors();
+      try {
+        const { main, secondary } = extractPaletteFromImage(img);
+        // 无缓存或缓存缺失 → 保存并应用（占位渐变即时更新到与图片更像）
+        if (!stored || !stored.main || !stored.secondary){
+          applyCssTheme(main, secondary);
+          saveThemeColors(main, secondary);
+        }
+      } catch(e){ /* 忽略取色失败（可能跨域或图片特殊），保留占位色 */ }
+    }
 
     // 设置背景并淡入
     el.style.backgroundImage = `url("${src}")`;
     requestAnimationFrame(()=> el.classList.add("show"));
   };
-  img.onerror = () => {
-    // 失败则保持占位渐变，不崩溃
-  };
-  // 优先 decode，部分浏览器提升首帧稳定
+  img.onerror = () => { /* 加载失败就继续用渐变，不阻断页面 */ };
+
   img.src = src;
   if (img.decode) { img.decode().catch(()=>{}); }
 }
 
-/*********** 页面启动主题占位 ***********/
+/*********** 首屏：占位色策略 ***********/
 function initThemePlaceholder(){
+  if (THEME_MODE === "manual"){
+    // 你手动指定的两种颜色，100% 可控，首屏即一致
+    applyCssTheme(THEME_MANUAL_MAIN, THEME_MANUAL_SECONDARY);
+    return;
+  }
+  // auto 模式：优先缓存色，没有则用 CSS 默认值，稍后取色成功会自动更新
   const stored = loadThemeColors();
   if (stored && stored.main && stored.secondary){
-    applyCssTheme(stored.main, stored.secondary); // 立即与图片同色
-  } // 否则用 CSS 默认色，稍后预载时会提色并保存
+    applyCssTheme(stored.main, stored.secondary);
+  }
 }
 
-/*********** 连接钱包 ***********/
+/*********** 连接/退出 与 守卫（保持不变） ***********/
 async function connectWallet(){
   const status = document.getElementById("status");
   const say = (t)=>{ if(status) status.textContent = "状态：" + t; };
@@ -118,15 +142,8 @@ async function connectWallet(){
     }
     if (!accounts || !accounts.length) { say("未获取到账户"); return; }
 
-    let chainIdHex = "0x0";
-    if (typeof window.ethereum.request === "function") {
-      chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
-    } else {
-      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      const net = await provider.getNetwork();
-      chainIdHex = "0x" + net.chainId.toString(16);
-    }
-    if (chainIdHex.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) { say("请切换到 BSC 主网后重试"); return; }
+    let chainIdHex = await getChainIdHex();
+    if (!chainIdHex || chainIdHex.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) { say("请切换到 BSC 主网后重试"); return; }
 
     const addr = accounts[0];
     say("已连接 " + addr.slice(0,6) + "..." + addr.slice(-4));
@@ -138,11 +155,8 @@ async function connectWallet(){
     if (status) status.textContent = "状态：连接失败 - " + msg + code;
   }
 }
-
-/*********** 退出登录 ***********/
 function logout(){ clearSession(); window.location.href = "index.html"; }
 
-/*********** Provider 守卫 ***********/
 function attachProviderGuards(){
   if (!window.ethereum) return;
   window.ethereum.on?.("accountsChanged", (accs)=>{
@@ -158,17 +172,50 @@ function attachProviderGuards(){
   });
 }
 
-/*********** 页面守卫与导航 ***********/
-function guardAppPage(){
+/*********** 会话严格校验（30 分钟 + 地址一致 + BSC） ***********/
+async function verifySessionStrict(){
   const sess = loadSession();
-  if (!sess || !sess.addr || !sess.chainId || sess.chainId.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) {
-    window.location.href = "index.html"; return;
-  }
-  const ids = ["addrLine","addrGroup","addrEarn","addrSwap","addrMine"];
-  ids.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = "地址：" + sess.addr; });
-  attachProviderGuards();
+  if (!sess) return { ok:false, reason:"no-session" };
+  if (!isSessionFresh(sess)) return { ok:false, reason:"expired" };
+  if (!sess.chainId || sess.chainId.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase())
+    return { ok:false, reason:"wrong-chain-in-session" };
+
+  if (!window.ethereum) return { ok:false, reason:"no-ethereum" };
+
+  const chainIdHex = await getChainIdHex();
+  if (!chainIdHex || chainIdHex.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase())
+    return { ok:false, reason:"wrong-chain-now" };
+
+  const accs = await getAuthorizedAccounts();
+  const current = accs && accs[0] ? accs[0].toLowerCase() : "";
+  if (!current) return { ok:false, reason:"no-authorized-account" };
+  if (current !== sess.addr.toLowerCase()) return { ok:false, reason:"addr-mismatch" };
+
+  return { ok:true };
 }
 
+/*********** 页面守卫与导航 ***********/
+async function guardLoginPage(){
+  const result = await verifySessionStrict();
+  if (result.ok) { window.location.href = "home.html"; return; }
+  const btn = document.getElementById("connectBtn");
+  if (btn) btn.onclick = connectWallet;
+}
+async function guardAppPage(){
+  const result = await verifySessionStrict();
+  if (!result.ok) { clearSession(); window.location.href = "index.html"; return; }
+
+  const sess = loadSession();
+  ["addrLine","addrGroup","addrEarn","addrSwap","addrMine"].forEach(id=>{
+    const el = document.getElementById(id); if (el) el.textContent = "地址：" + sess.addr;
+  });
+  attachProviderGuards();
+
+  setInterval(async ()=>{
+    const ok = await verifySessionStrict();
+    if (!ok.ok) { clearSession(); window.location.href = "index.html"; }
+  }, 15000);
+}
 function setActiveTabbar(){
   const path = location.pathname;
   const map = [
@@ -187,20 +234,19 @@ function setActiveTabbar(){
 }
 
 /*********** 启动 ***********/
-window.addEventListener("DOMContentLoaded", ()=>{
+window.addEventListener("DOMContentLoaded", async ()=>{
   setVersionBadge();
 
-  // 1) 立即用缓存主题上色 → 占位梯度立刻可见
+  // 1) 占位色：manual 立即使用你设置的颜色；auto 先用缓存
   initThemePlaceholder();
-  // 2) 预加载 bg.jpg，完成后设置到 .bg 并淡入
+  // 2) 预载大图，成功后淡入（auto 时可顺带更新缓存色）
   preloadAndShowBackground("tupian/bg.jpg");
 
   const p = location.pathname;
   if (p.endsWith("/") || p.endsWith("index.html")) {
-    const btn = document.getElementById("connectBtn");
-    if (btn) btn.onclick = connectWallet;
+    await guardLoginPage();
   } else {
-    guardAppPage();
+    await guardAppPage();
     setActiveTabbar();
   }
 });
