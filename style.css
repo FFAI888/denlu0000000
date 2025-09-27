@@ -1,22 +1,40 @@
-/* version: v1.03 */
+/* version: v1.04 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   color: #fff;
-  background: transparent;   /* ✅ 不再强制黑底，交给背景图显示 */
+  background: transparent;
   overflow-x: hidden;
 }
 img { display: block; max-width: 100%; }
 button { -webkit-tap-highlight-color: transparent; }
 
-/* 背景图：显示你的 tupian/bg.jpg 原图，不再压暗 */
-.bg {
-  position: fixed; inset: 0;
-  background: url("./tupian/bg.jpg") center/cover no-repeat;
-  z-index: -1;
-  /* ❌ 删除了 brightness(0.8) 压暗滤镜 */
+/* 主题色变量（初始值，首次访问会用默认；有缓存则 JS 会覆盖） */
+:root{
+  --theme-main: #0d1b2a;
+  --theme-secondary: #1b263b;
 }
+
+/* 占位渐变层：即时可见，避免空白 */
+.bg-color{
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, var(--theme-main), var(--theme-secondary));
+  z-index: -2;
+}
+
+/* 背景图层：初始隐藏，加载完成再淡入，避免“逐行显现” */
+.bg{
+  position: fixed; inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity .25s linear;
+  will-change: opacity;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.bg.show{ opacity: 1; }
 
 /* 版本号徽标 */
 .ver-badge{
@@ -27,7 +45,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* 容器与卡片 */
-.container { padding: 16px; padding-bottom: 72px; } /* 预留底部导航高度 */
+.container { padding: 16px; padding-bottom: 72px; }
 .login-card {
   background: rgba(0,0,0,0.6);
   border: 1px solid rgba(255,255,255,0.12);
