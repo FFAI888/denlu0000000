@@ -1,13 +1,10 @@
-// version: v1.03
+// version: v1.04
 
 /*********** 版本徽标 ***********/
 function setVersionBadge(){
   const el = document.getElementById("verBadge");
   if (el && typeof APP_VERSION === "string") el.textContent = APP_VERSION;
 }
-
-/*********** （已删除）文件修改提示渲染 ***********/
-// 按你的要求，彻底移除“文件名（版本，修改的/未修改的）”渲染逻辑与依赖。
 
 /*********** HSB → RGB/HEX ***********/
 function hsvToRgb(h, sPct, vPct){
@@ -37,11 +34,9 @@ function applyFixedHSBTheme(){
     const secRGB  = hsvToRgb(THEME_FIXED_HSB.h, THEME_FIXED_HSB.s, Math.round(THEME_FIXED_HSB.b*0.85));
     const mainHex = rgbToHex(mainRGB);
     const secHex  = rgbToHex(secRGB);
-
     const root = document.documentElement;
     root.style.setProperty('--theme-main', mainHex);
     root.style.setProperty('--theme-secondary', secHex);
-
     localStorage.setItem(LS_KEY.THEME, JSON.stringify({ main: mainHex, secondary: secHex, ver: `fixed-hsb-${THEME_FIXED_HSB.h}-${THEME_FIXED_HSB.s}-${THEME_FIXED_HSB.b}` }));
   }catch(e){}
 }
@@ -139,12 +134,82 @@ function attachProviderGuards(){
     }
   });
 }
+
+/*********** ===== 登录页：弹窗颜色提示 ===== ***********/
+let __noticeEl = null;
+function getNoticeEl(){
+  if (__noticeEl) return __noticeEl;
+  const el = document.createElement('div');
+  el.className = 'notice';
+  el.id = 'notice';
+  el.style.top = '12vh';            // 初始在上方
+  el.style.transform = 'translateX(-50%) translateY(-16px)';
+  document.body.appendChild(el);
+  __noticeEl = el;
+  return el;
+}
+/**
+ * 显示弹窗
+ * @param {string} msg - 文本
+ * @param {'info'|'warn'|'success'|'error'} type
+ * @param {number} duration - 显示毫秒，默认3000
+ * @param {number} delay - 延迟毫秒，默认1000
+ */
+function showNotice(msg, type='info', duration=3000, delay=1000){
+  const el = getNoticeEl();
+  // 颜色风格
+  el.classList.remove('warn','success','error');
+  if (type==='warn') el.classList.add('warn');
+  else if (type==='success') el.classList.add('success');
+  else if (type==='error') el.classList.add('error');
+  else { /* info 默认 */ }
+
+  el.textContent = msg;
+
+  // 计算定位到登录卡片上方
+  const card = document.getElementById('loginCard');
+  let targetTop = 100; // 回退
+  try{
+    if (card){
+      const rect = card.getBoundingClientRect();
+      const h = el.offsetHeight || 44;
+      targetTop = Math.max(12, rect.top - h - 12);
+    }
+  }catch(e){}
+  // 初始位置稍高一点，并透明
+  el.style.top = (targetTop - 16) + 'px';
+  el.style.opacity = '0';
+  el.classList.remove('show');
+
+  // 延迟展示 → 下滑至目标位置并淡入
+  clearTimeout(el.__timerIn);
+  clearTimeout(el.__timerOut);
+  el.__timerIn = setTimeout(()=>{
+    el.style.top = targetTop + 'px';
+    el.style.transform = 'translateX(-50%) translateY(0)';
+    el.classList.add('show'); // 触发透明度与位移过渡
+
+    // 自动隐藏
+    el.__timerOut = setTimeout(()=>{
+      el.classList.remove('show');
+      el.style.transform = 'translateX(-50%) translateY(-8px)';
+      el.style.opacity = '0';
+    }, duration);
+  }, delay);
+}
+
+/*********** 登录页守卫 ***********/
 async function guardLoginPage(){
   const result = await verifySessionStrict();
   if (result.ok) { window.location.href = "home.html"; return; }
   const btn = document.getElementById("connectBtn");
   if (btn) btn.onclick = connectWallet;
+
+  // 登录页提示：延迟1秒出现，3秒自动消失
+  showNotice('仅支持 BSC 主网，请使用钱包内置浏览器连接后进入', 'info', 3000, 1000);
 }
+
+/*********** 应用页守卫（首页） ***********/
 async function guardAppPage(){
   const result = await verifySessionStrict();
   if (!result.ok) { clearSession(); window.location.href = "index.html"; return; }
