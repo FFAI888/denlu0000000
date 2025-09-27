@@ -1,32 +1,51 @@
-<!-- version: v1.00 -->
+<!-- version: v1.01 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>登录</title>
+
+  <!-- 首帧注入主题色（使用你指定的 HSB=214/98/100 预计算的 HEX），避免闪黑 -->
+  <script>
+  (function(){
+    try{
+      // HSB(214,98,100) ≈ 主色 #0571FF；副色取更深一档 ≈ #0058E6
+      var main = '#0571FF';
+      var sec  = '#0058E6';
+
+      // 若本地已有主题，仍以固定HSB覆盖（确保首帧就是目标色）
+      var root=document.documentElement;
+      root.style.setProperty('--theme-main', main);
+      root.style.setProperty('--theme-secondary', sec);
+
+      // 也写入 localStorage，供其它页面首帧复用
+      localStorage.setItem('themeColorsV2', JSON.stringify({main:main, secondary:sec, ver:'fixed-hsb-214-98-100'}));
+    }catch(e){}
+  })();
+  </script>
+
+  <link rel="preload" as="image" href="tupian/bg.jpg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 右上角版本号 -->
-  <div id="verBadge" class="ver-badge">v1.00</div>
-
-  <!-- 文件名（版本，修改的/未修改的）小标签由 app.js 注入 -->
-  <!-- 背景 -->
-  <div class="bg-gradient"></div>
+  <div id="verBadge" class="ver-badge">v1.01</div>
+  <div class="bg-color" id="bgColor"></div>
+  <div class="bg" id="bg"></div>
 
   <main class="container">
-    <section class="login-card">
-      <div class="login-logo">DApp</div>
-      <h2>连接钱包登录</h2>
-      <p class="sub">仅支持 BSC 主网 (56)</p>
+    <div class="login-card">
+      <img class="logo" src="tupian/logo.png" alt="logo" />
+      <h2>欢迎登录</h2>
+      <p class="sub">仅支持 BSC 主网（56）</p>
       <button id="connectBtn" class="btn-primary">🔗 连接钱包</button>
       <p id="status" class="status">状态：未连接</p>
-    </section>
+    </div>
   </main>
 
+  <!-- 必须按此顺序 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js?v=1.00"></script>
-  <script src="app.js?v=1.00"></script>
+  <script src="config.js?v=1.01"></script>
+  <script src="app.js?v=1.01"></script>
 </body>
 </html>
