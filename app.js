@@ -1,4 +1,4 @@
-// version: v1.04
+// version: v1.07
 
 /*********** 版本徽标 ***********/
 function setVersionBadge(){
@@ -68,11 +68,64 @@ async function getChainIdHex(){
   }catch(e){ return null; }
 }
 
+/*********** 弹窗（沿用） ***********/
+let __noticeEl = null;
+function getNoticeEl(){
+  if (__noticeEl) return __noticeEl;
+  const el = document.createElement('div');
+  el.className = 'notice';
+  el.id = 'notice';
+  el.style.top = '12vh';
+  el.style.transform = 'translateX(-50%) translateY(-16px)';
+  document.body.appendChild(el);
+  __noticeEl = el;
+  return el;
+}
+function showNotice(msg, type='info', duration=3000, delay=0){
+  const el = getNoticeEl();
+  el.classList.remove('warn','success','error');
+  if (type==='warn') el.classList.add('warn');
+  else if (type==='success') el.classList.add('success');
+  else if (type==='error') el.classList.add('error');
+  el.textContent = msg;
+
+  const card = document.getElementById('loginCard');
+  let targetTop = 100;
+  try{
+    if (card){
+      const rect = card.getBoundingClientRect();
+      const h = el.offsetHeight || 44;
+      targetTop = Math.max(12, rect.top - h - 12);
+    }
+  }catch(e){}
+  el.style.top = (targetTop - 16) + 'px';
+  el.style.opacity = '0';
+  el.classList.remove('show');
+
+  clearTimeout(el.__timerIn); clearTimeout(el.__timerOut);
+  el.__timerIn = setTimeout(()=>{
+    el.style.top = targetTop + 'px';
+    el.style.transform = 'translateX(-50%) translateY(0)';
+    el.classList.add('show');
+    el.__timerOut = setTimeout(()=>{
+      el.classList.remove('show');
+      el.style.transform = 'translateX(-50%) translateY(-8px)';
+      el.style.opacity = '0';
+    }, duration);
+  }, delay);
+}
+
 /*********** 连接钱包（登录页） ***********/
 async function connectWallet(){
+  showNotice('正在发起连接钱包，请在钱包中确认…', 'info', 2500, 0);
+
   const status = document.getElementById("status");
   const say = (t)=>{ if(status) status.textContent = "状态：" + t; };
-  if (!window.ethereum) { say("未检测到钱包，请在 MetaMask/OKX 钱包内置浏览器打开"); return; }
+  if (!window.ethereum) {
+    say("未检测到钱包，请在 MetaMask/OKX 钱包内置浏览器打开");
+    showNotice('未检测到钱包，请用钱包内置浏览器打开（仅支持 BSC）', 'warn', 3500, 0);
+    return;
+  }
   try {
     let accounts = [];
     if (typeof window.ethereum.request === "function") {
@@ -81,25 +134,30 @@ async function connectWallet(){
       const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
       accounts = await provider.send("eth_requestAccounts", []);
     }
-    if (!accounts || !accounts.length) { say("未获取到账户"); return; }
+    if (!accounts || !accounts.length) {
+      say("未获取到账户");
+      showNotice('未授权账户，请在钱包里同意授权', 'warn', 3000, 0);
+      return;
+    }
 
     let chainIdHex = await getChainIdHex();
     if (!chainIdHex || chainIdHex.toLowerCase() !== SUPPORTED_CHAIN_HEX.toLowerCase()) {
-      say("请切换到 BSC 主网后重试"); return;
+      say("请切换到 BSC 主网后重试");
+      showNotice('请切换到 BSC 主网（56）后重试', 'warn', 3200, 0);
+      return;
     }
     const addr = accounts[0];
     say("已连接 " + addr.slice(0,6) + "..." + addr.slice(-4));
+    showNotice('连接成功，正在进入首页…', 'success', 1500, 0);
     saveSession(addr, SUPPORTED_CHAIN_HEX);
-    window.location.href = "home.html";
+    setTimeout(()=> window.location.href = "home.html", 600);
   } catch (err) {
     const msg = err && (err.message || err.reason) ? (err.message || err.reason) : String(err);
     const code = err && err.code ? ` (code:${err.code})` : "";
     if (status) status.textContent = "状态：连接失败 - " + msg + code;
+    showNotice('连接失败：' + msg, 'error', 3800, 0);
   }
 }
-
-/*********** 退出登录 ***********/
-function logout(){ clearSession(); window.location.href = "index.html"; }
 
 /*********** 页面守卫 ***********/
 async function verifySessionStrict(){
@@ -135,78 +193,13 @@ function attachProviderGuards(){
   });
 }
 
-/*********** ===== 登录页：弹窗颜色提示 ===== ***********/
-let __noticeEl = null;
-function getNoticeEl(){
-  if (__noticeEl) return __noticeEl;
-  const el = document.createElement('div');
-  el.className = 'notice';
-  el.id = 'notice';
-  el.style.top = '12vh';            // 初始在上方
-  el.style.transform = 'translateX(-50%) translateY(-16px)';
-  document.body.appendChild(el);
-  __noticeEl = el;
-  return el;
-}
-/**
- * 显示弹窗
- * @param {string} msg - 文本
- * @param {'info'|'warn'|'success'|'error'} type
- * @param {number} duration - 显示毫秒，默认3000
- * @param {number} delay - 延迟毫秒，默认1000
- */
-function showNotice(msg, type='info', duration=3000, delay=1000){
-  const el = getNoticeEl();
-  // 颜色风格
-  el.classList.remove('warn','success','error');
-  if (type==='warn') el.classList.add('warn');
-  else if (type==='success') el.classList.add('success');
-  else if (type==='error') el.classList.add('error');
-  else { /* info 默认 */ }
-
-  el.textContent = msg;
-
-  // 计算定位到登录卡片上方
-  const card = document.getElementById('loginCard');
-  let targetTop = 100; // 回退
-  try{
-    if (card){
-      const rect = card.getBoundingClientRect();
-      const h = el.offsetHeight || 44;
-      targetTop = Math.max(12, rect.top - h - 12);
-    }
-  }catch(e){}
-  // 初始位置稍高一点，并透明
-  el.style.top = (targetTop - 16) + 'px';
-  el.style.opacity = '0';
-  el.classList.remove('show');
-
-  // 延迟展示 → 下滑至目标位置并淡入
-  clearTimeout(el.__timerIn);
-  clearTimeout(el.__timerOut);
-  el.__timerIn = setTimeout(()=>{
-    el.style.top = targetTop + 'px';
-    el.style.transform = 'translateX(-50%) translateY(0)';
-    el.classList.add('show'); // 触发透明度与位移过渡
-
-    // 自动隐藏
-    el.__timerOut = setTimeout(()=>{
-      el.classList.remove('show');
-      el.style.transform = 'translateX(-50%) translateY(-8px)';
-      el.style.opacity = '0';
-    }, duration);
-  }, delay);
-}
-
 /*********** 登录页守卫 ***********/
 async function guardLoginPage(){
   const result = await verifySessionStrict();
   if (result.ok) { window.location.href = "home.html"; return; }
   const btn = document.getElementById("connectBtn");
   if (btn) btn.onclick = connectWallet;
-
-  // 登录页提示：延迟1秒出现，3秒自动消失
-  showNotice('仅支持 BSC 主网，请使用钱包内置浏览器连接后进入', 'info', 3000, 1000);
+  setTimeout(()=> showNotice('仅支持 BSC 主网，请使用钱包内置浏览器连接', 'info', 3000, 0), 1000);
 }
 
 /*********** 应用页守卫（首页） ***********/
@@ -217,7 +210,6 @@ async function guardAppPage(){
   const addrEl = document.getElementById("addrLine"); if (addrEl) addrEl.textContent = "地址：" + sess.addr;
   const netEl  = document.getElementById("netLine");  if (netEl)  netEl.textContent  = "网络：BSC（56）";
   const guardEl= document.getElementById("guardLine"); if (guardEl) guardEl.textContent= "守卫：已生效";
-
   attachProviderGuards();
   setInterval(async ()=>{
     const ok = await verifySessionStrict();
@@ -225,24 +217,99 @@ async function guardAppPage(){
   }, 15000);
 }
 
-/*********** 背景图加载并淡入（可选） ***********/
-function loadAndApplyBackground(){
-  const bgEl = document.getElementById("bg");
-  if (!bgEl) return;
-  const img = new Image();
-  if (IMAGE_CROSSORIGIN) img.crossOrigin = "anonymous";
-  img.onload = function(){
-    bgEl.style.backgroundImage = `url("${BG_IMAGE_SRC}")`;
-    requestAnimationFrame(()=> bgEl.classList.add("show"));
-  };
-  img.src = BG_IMAGE_SRC + (BG_IMAGE_VERSION ? (`?v=${BG_IMAGE_VERSION}`) : "");
+/*********** ===== 自动 LQ：主题色生成内联 SVG ===== ***********/
+function getThemeColors(){
+  try{
+    const obj = JSON.parse(localStorage.getItem(LS_KEY.THEME) || 'null');
+    const css = getComputedStyle(document.documentElement);
+    const main = (obj && obj.main) || css.getPropertyValue('--theme-main') || '#0571FF';
+    const secondary = (obj && obj.secondary) || css.getPropertyValue('--theme-secondary') || '#0058E6';
+    return { main: String(main).trim(), secondary: String(secondary).trim() };
+  }catch(e){ return { main:'#0571FF', secondary:'#0058E6' }; }
 }
+function buildLQDataURL(){
+  const { main, secondary } = getThemeColors();
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'>` +
+    `<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>` +
+    `<stop offset='0%' stop-color='${main}'/><stop offset='100%' stop-color='${secondary}'/>` +
+    `</linearGradient></defs>` +
+    `<rect width='100%' height='100%' fill='url(#g)'/></svg>`;
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+
+/*********** 渐进式背景加载（改：支持 lqSrc="auto"） ***********/
+function createBgLQEl(){
+  let el = document.getElementById('bgLQ');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'bgLQ';
+    el.className = 'bg-lq';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function setBg(el, url){ el.style.backgroundImage = `url("${url}")`; }
+function preloadImage(url){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.decoding = 'async'; img.loading = 'eager'; img.setAttribute && img.setAttribute('fetchpriority','high');
+    img.onload = ()=> resolve(url);
+    img.onerror = ()=> reject(new Error('load failed: '+url));
+    img.src = url;
+  });
+}
+async function loadBackgroundProgressive(){
+  try{
+    const bgHi = document.getElementById("bg");
+    if (!bgHi) return;
+
+    // 1) 低清层：若 lqSrc='auto' 则用主题色生成 SVG；否则用配置地址
+    if (BG_PROGRESSIVE && BG_PROGRESSIVE.useLQ){
+      const lqEl = createBgLQEl();
+      const lqUrl = (BG_PROGRESSIVE.lqSrc === 'auto') ? buildLQDataURL() : BG_PROGRESSIVE.lqSrc;
+      setBg(lqEl, lqUrl);
+      requestAnimationFrame(()=> lqEl.classList.add('show'));
+    }
+
+    // 2) 选择高清候选：AVIF → WebP → JPG（任一成功即用）
+    const cand = (BG_PROGRESSIVE && Array.isArray(BG_PROGRESSIVE.candidates) ? BG_PROGRESSIVE.candidates : [BG_IMAGE_SRC]).slice();
+    let chosen = null;
+    for (let i=0;i<cand.length;i++){
+      try{ chosen = await preloadImage(cand[i]); break; }catch(e){}
+    }
+    if (!chosen){ chosen = BG_IMAGE_SRC + (BG_IMAGE_VERSION ? (`?v=${BG_IMAGE_VERSION}`) : ""); }
+
+    // 3) 设置高清并淡入；同时淡出 LQ
+    setBg(bgHi, chosen);
+    const cross = (BG_PROGRESSIVE && BG_PROGRESSIVE.crossfadeMs) || 260;
+    bgHi.style.transitionDuration = cross + 'ms';
+    requestAnimationFrame(()=> bgHi.classList.add('show'));
+
+    const lqEl = document.getElementById('bgLQ');
+    if (lqEl){
+      lqEl.style.transitionDuration = cross + 'ms';
+      setTimeout(()=>{ lqEl.classList.remove('show'); }, Math.max(0, cross-30));
+    }
+  }catch(e){ /* 忽略错误，不影响功能 */ }
+}
+
+/*********** Service Worker 注册（沿用） ***********/
+function registerSW(){
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js?v='+APP_VERSION).catch(()=>{});
+  }
+}
+
+/*********** 背景入口 ***********/
+function loadAndApplyBackground(){ loadBackgroundProgressive(); }
 
 /*********** 启动 ***********/
 document.addEventListener("DOMContentLoaded", ()=>{
   setVersionBadge();
   applyFixedHSBTheme();
   loadAndApplyBackground();
+  registerSW();
 
   const isLogin = location.pathname.endsWith("index.html") || /\/$/.test(location.pathname);
   if (isLogin) guardLoginPage(); else guardAppPage();
