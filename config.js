@@ -1,5 +1,5 @@
-// version: v1.03
-const APP_VERSION = "v1.03";
+// version: v1.04
+const APP_VERSION = "v1.04";
 
 /** 仅支持 BSC 主网 */
 const SUPPORTED_CHAIN_HEX = "0x38"; // 56
@@ -21,5 +21,3 @@ const LS_KEY = {
   SESSION: "session",        // {addr, chainId, ts}
   THEME:   "themeColorsV2",  // {main, secondary, ver}
 };
-
-// 🔥 已按你要求：移除与“页面是否修改提示”相关的全部配置与清单
