@@ -1,4 +1,4 @@
-<!-- version: v1.01 -->
+<!-- version: v1.03 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -6,20 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>登录</title>
 
-  <!-- 首帧注入主题色（使用你指定的 HSB=214/98/100 预计算的 HEX），避免闪黑 -->
+  <!-- 首帧注入主题色（HSB 214/98/100 -> #0571FF / #0058E6） -->
   <script>
   (function(){
     try{
-      // HSB(214,98,100) ≈ 主色 #0571FF；副色取更深一档 ≈ #0058E6
-      var main = '#0571FF';
-      var sec  = '#0058E6';
-
-      // 若本地已有主题，仍以固定HSB覆盖（确保首帧就是目标色）
+      var main = '#0571FF'; var sec  = '#0058E6';
       var root=document.documentElement;
       root.style.setProperty('--theme-main', main);
       root.style.setProperty('--theme-secondary', sec);
-
-      // 也写入 localStorage，供其它页面首帧复用
       localStorage.setItem('themeColorsV2', JSON.stringify({main:main, secondary:sec, ver:'fixed-hsb-214-98-100'}));
     }catch(e){}
   })();
@@ -29,7 +23,8 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.01</div>
+  <div id="verBadge" class="ver-badge">v1.03</div>
+
   <div class="bg-color" id="bgColor"></div>
   <div class="bg" id="bg"></div>
 
@@ -45,7 +40,7 @@
 
   <!-- 必须按此顺序 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js?v=1.01"></script>
-  <script src="app.js?v=1.01"></script>
+  <script src="config.js?v=1.03"></script>
+  <script src="app.js?v=1.03"></script>
 </body>
 </html>
