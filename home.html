@@ -1,51 +1,40 @@
-<!-- version: v1.07 -->
+<!-- version: v0.04 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>首页</title>
 
-  <script>
-  (function(){
-    try{
-      var obj=null; try{ obj=JSON.parse(localStorage.getItem('themeColorsV2')||'null'); }catch(e){}
-      var main=(obj&&obj.main)||'#0571FF';
-      var sec =(obj&&obj.secondary)||'#0058E6';
-      var root=document.documentElement;
-      root.style.setProperty('--theme-main', main);
-      root.style.setProperty('--theme-secondary', sec);
-    }catch(e){}
-  })();
-  </script>
+  <!-- 主题色：H214 S97 B100 => 主色 #0873FF / 副色 #0762D9 -->
+  <style>
+    :root{
+      --theme-main: #0873FF;
+      --theme-secondary: #0762D9;
+      --theme-shadow: rgba(8,115,255,.35);
+    }
+  </style>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=0.04" />
 </head>
 <body>
-  <div id="verBadge" class="ver-badge">v1.07</div>
-
-  <div class="bg-color" id="bgColor"></div>
-  <div class="bg" id="bg"></div>
+  <div id="verBadge" class="ver-badge">v0.04</div>
 
   <header class="topbar">
-    <div class="left">
-      <img class="logo-small" src="tupian/logo.png" alt="logo" />
-      <span class="title">首页</span>
-    </div>
-    <button class="btn-danger" onclick="logout()">退出</button>
+    <span class="title">首页</span>
+    <button id="logoutBtn" class="btn-danger">退出</button>
   </header>
 
   <main class="container">
     <section class="panel">
-      <h3>钱包状态</h3>
+      <h3>钱包信息</h3>
       <p id="addrLine">地址：检测中…</p>
       <p id="netLine">网络：检测中…</p>
-      <p id="guardLine">守卫：检测中…</p>
     </section>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="config.js?v=1.07"></script>
-  <script src="app.js?v=1.07"></script>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="app.js?v=0.04"></script>
 </body>
 </html>
